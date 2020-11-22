@@ -1,0 +1,4 @@
+{:bugs/jetty   {:port    3000
+                :handler #ig/ref :bugs/handler}
+ :bugs/handler {:db #ig/ref :bugs/db}
+ :bugs/db       {:dbtype "postgresql" :dbname "bugs" :user "bugs" :password "bugs"}}

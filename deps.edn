@@ -1,0 +1,25 @@
+{:paths   ["src/clj" "src/cljs" "resources"]
+ :deps    {org.clojure/clojure       {:mvn/version "1.10.1"}
+           org.clojure/clojurescript {:mvn/version "1.10.339"}
+           ring/ring-core            {:mvn/version "1.8.2"}
+           ring/ring-jetty-adapter   {:mvn/version "1.8.2"}
+           ring-cors/ring-cors       {:mvn/version "0.1.13"}
+           metosin/reitit            {:mvn/version "0.5.10"}
+           metosin/muuntaja          {:mvn/version "0.6.7"}
+           seancorfield/next.jdbc    {:mvn/version "1.1.613"}
+           org.postgresql/postgresql {:mvn/version "42.2.18"}
+           ragtime/ragtime           {:mvn/version "0.8.0"}
+           integrant                 {:mvn/version "0.8.0"}
+           integrant/repl            {:mvn/version "0.3.2"}
+           environ/environ           {:mvn/version "1.2.0"}}
+ :aliases {:test      {:extra-paths ["test/clj"]
+                       :extra-deps  {lambdaisland/kaocha {:mvn/version "1.0-612"}}
+                       :main-opts   ["-m" "kaocha.runner"]}
+           :uberjar   {:extra-deps {uberdeps {:mvn/version "0.1.10"}}
+                       :main-opts  ["-m" "uberdeps.uberjar" "--target" "target/bugs.core-0.1.jar"]}
+           :fig       {:extra-deps  {com.bhauman/figwheel-main       {:mvn/version "0.1.9"}
+                                     com.bhauman/rebel-readline-cljs {:mvn/version "0.1.4"}}
+                       :extra-paths ["target" "test/cljs"]}
+           :fig-build {:main-opts ["-m" "figwheel.main" "-b" "dev" "-r"]}
+           :fig-min   {:main-opts ["-m" "figwheel.main" "-O" "advanced" "-bo" "dev"]}
+           :fig-test  {:main-opts ["-m" "figwheel.main" "-co" "test.cljs.edn" "-m" "bugs.core.test-runner"]}}}

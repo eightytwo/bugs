@@ -1,0 +1,13 @@
+# Build
+target
+
+# Clojure development
+.clj-kondo
+.cpcache
+.nrepl-history
+.nrepl-port
+.rebel_readline_history
+
+# Editors
+.iml
+.idea
