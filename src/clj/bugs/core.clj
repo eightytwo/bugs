@@ -1,6 +1,6 @@
 (ns bugs.core
-  (:require [bugs.math.controllers :as math-controllers]
-            [bugs.math.schemas :as math-schemas]
+  (:require [bugs.bugs.controllers :as bugs-controllers]
+            [bugs.bugs.schemas :as bugs-schemas]
             [bugs.middleware :as middleware]
             [muuntaja.core :as m]
             [reitit.ring :as ring]
@@ -17,23 +17,22 @@
 (def routes
   [["/swagger.json"
     {:get {:no-doc  true
-           :swagger {:info {:title       "my-api"
-                            :description "with reitit-ring"}}
+           :swagger {:info {:title       "Bugs API"
+                            :description "The HTTP API for the Bugs application"}}
            :handler (swagger/create-swagger-handler)}}]
 
-   ["/math"
-    {:swagger {:tags ["math"]}}
+   ["/bugs"
+    {:swagger {:tags ["bugs"]}
 
-    ["/plus"
-     {:get  {:summary    "plus with spec query parameters"
-             :parameters math-schemas/get-add-request
-             :responses  {200 math-schemas/add-response}
-             :handler    math-controllers/get-add}
+     :get     {:summary    "Retrieve all of your bugs"
+               :parameters bugs-schemas/get-bugs-request
+               :responses  {200 bugs-schemas/get-bugs-response}
+               :handler    bugs-controllers/get-bugs}
 
-      :post {:summary    "plus with spec body parameters"
-             :parameters math-schemas/post-add-request
-             :responses  {200 math-schemas/add-response}
-             :handler    math-controllers/post-add}}]]])
+     :post    {:summary    "Add a bug to your collection"
+               :parameters bugs-schemas/post-bugs-request
+               :responses  {200 bugs-schemas/post-bugs-response}
+               :handler    bugs-controllers/post-bugs}}]])
 
 (defn create-app [db]
   (ring/ring-handler
@@ -44,23 +43,23 @@
                              :muuntaja   m/instance
                              :middleware [;; swagger feature
                                           swagger/swagger-feature
-                                           ;; query-params & form-params
+                                          ;; query-params & form-params
                                           parameters/parameters-middleware
-                                           ;; content-negotiation
+                                          ;; content-negotiation
                                           muuntaja/format-negotiate-middleware
-                                           ;; encoding response body
+                                          ;; encoding response body
                                           muuntaja/format-response-middleware
-                                           ;; exception handling
+                                          ;; exception handling
                                           exception/exception-middleware
-                                           ;; decoding request body
+                                          ;; decoding request body
                                           muuntaja/format-request-middleware
-                                           ;; coercing response bodys
+                                          ;; coercing response bodys
                                           coercion/coerce-response-middleware
-                                           ;; coercing request parameters
+                                          ;; coercing request parameters
                                           coercion/coerce-request-middleware
-                                           ;; multipart
+                                          ;; multipart
                                           multipart/multipart-middleware
-                                           ;; inject the database into the handler
+                                          ;; inject the database into the handler
                                           middleware/db]}})
    (ring/routes
     (swagger-ui/create-swagger-ui-handler
