@@ -1,2 +1,6 @@
-{:up   ["CREATE TABLE foo (id int);"]
- :down ["DROP TABLE foo;"]}
+{:up   ["CREATE TABLE bugs (
+           id serial PRIMARY KEY,
+           created_at timestamp without time zone DEFAULT now() NOT NULL,
+           name text NOT NULL
+         );"]
+ :down ["DROP TABLE bugs;"]}

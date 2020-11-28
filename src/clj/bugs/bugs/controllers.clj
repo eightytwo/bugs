@@ -1,18 +1,18 @@
-(ns bugs.bugs.controllers)
-  ;(:require [next.jdbc.sql :as sql]
-  ;          [next.jdbc :as jdbc])
+(ns bugs.bugs.controllers
+  (:require [bugs.db :as queries]))
 
 (defn get-bugs
   [req]
-  (let [_ (:db req)
-        {{{:keys [type]} :query} :parameters} req]
-    ;(with-open [conn (jdbc/get-connection db)]
-    ;  (let [record (sql/find-by-keys conn :foo {:id 1})]
-    ;    (println "!! Found record: " record)))
-    (print "Querying for bugs of type" type)
+  (let [db (:db req)]
     {:status 200
-     :body   [{:id 1 :type "Grasshopper" :name "Joe"}
-              {:id 2 :type "Dragon Fly" :name "Jane"}]}))
+     :body   (queries/get-bugs db)}))
+
+(defn get-bug
+  [req]
+  (let [db (:db req)
+        id (:id (:path (:parameters req)))]
+    {:status 200
+     :body   (queries/get-bug-by-id db {:id id})}))
 
 (defn post-bugs
   [req]

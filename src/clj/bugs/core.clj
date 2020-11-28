@@ -22,17 +22,33 @@
            :handler (swagger/create-swagger-handler)}}]
 
    ["/bugs"
-    {:swagger {:tags ["bugs"]}
+    {:swagger {:tags ["bugs"]}}
 
-     :get     {:summary    "Retrieve all of your bugs"
-               :parameters bugs-schemas/get-bugs-request
-               :responses  {200 bugs-schemas/get-bugs-response}
-               :handler    bugs-controllers/get-bugs}
+    [""
+     {:get  {:summary   "Retrieve all of your bugs"
+             :responses {200 bugs-schemas/get-bugs-response}
+             :handler   bugs-controllers/get-bugs}
 
-     :post    {:summary    "Add a bug to your collection"
-               :parameters bugs-schemas/post-bugs-request
-               :responses  {200 bugs-schemas/post-bugs-response}
-               :handler    bugs-controllers/post-bugs}}]])
+      :post {:summary    "Add a bug to your collection"
+             :parameters bugs-schemas/post-bugs-request
+             :responses  {200 bugs-schemas/post-bugs-response}
+             :handler    bugs-controllers/post-bugs}}]
+
+    ["/:id"
+     {:get  {:summary    "Get a bug by its id"
+             :parameters bugs-schemas/get-bug-request
+             :responses  {200 bugs-schemas/get-bug-response}
+             :handler    bugs-controllers/get-bug}}]]])
+
+(def exception-middleware
+  (exception/create-exception-middleware
+   (merge
+    exception/default-handlers
+    {;; print stack-traces for all exceptions
+     ::exception/wrap (fn [handler e request]
+                          ;; TODO: better exception handling
+                        (println e)
+                        (handler e request))})))
 
 (defn create-app [db]
   (ring/ring-handler
@@ -50,7 +66,7 @@
                                           ;; encoding response body
                                           muuntaja/format-response-middleware
                                           ;; exception handling
-                                          exception/exception-middleware
+                                          exception-middleware
                                           ;; decoding request body
                                           muuntaja/format-request-middleware
                                           ;; coercing response bodys

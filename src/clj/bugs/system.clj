@@ -1,5 +1,7 @@
 (ns bugs.system
   (:require [environ.core :refer [env]]
+            [hugsql.core :as hugsql]
+            [hugsql.adapter.next-jdbc :as next-adapter]
             [integrant.core :as ig]
             [next.jdbc :as jdbc]
             [ring.adapter.jetty :as jetty]
@@ -27,6 +29,7 @@
   (core/create-app db))
 
 (defmethod ig/init-key :bugs/db [_ db]
+  (hugsql/set-adapter! (next-adapter/hugsql-adapter-next-jdbc))
   (jdbc/get-datasource db))
 
 (defmethod ig/halt-key! :bugs/jetty [_ jetty]
