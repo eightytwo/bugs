@@ -1,8 +1,8 @@
 -- A :result value of :n below will return affected rows:
--- :name insert-bug :! :n
+-- :name insert-bug :i!
 -- :doc Insert a single bug returning affected row count
 INSERT INTO bugs (name)
-values      (:name)
+VALUES (:name)
 
 -- :name get-bugs :n
 -- :doc Get bug by id

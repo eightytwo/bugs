@@ -16,10 +16,8 @@
 
 (defn post-bugs
   [req]
-  (let [_ (:db req)
-        {{:keys [body]} :parameters} req]
-    ;(sql/insert! db :foo {:id 1})
-    (print "Would create bug: " body)
-    (let [new-bug (assoc body :id 1)]
-      {:status 200
-       :body   new-bug})))
+  (let [db (:db req)
+        body (:body (:parameters req))
+        bug (first (queries/insert-bug db body))]
+    {:status 200
+     :body   (dissoc bug :created_at)}))
