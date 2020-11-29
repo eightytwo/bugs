@@ -1,19 +1,20 @@
 {:paths   ["src/clj" "src/cljs" "resources"]
- :deps    {org.clojure/clojure                    {:mvn/version "1.10.1"}
+ :deps    {com.layerware/hugsql-core              {:mvn/version "0.5.1"}
+           com.layerware/hugsql-adapter-next-jdbc {:mvn/version "0.5.1"}
+           com.mchange/c3p0                       {:mvn/version "0.9.5.5"}
+           environ/environ                        {:mvn/version "1.2.0"}
+           integrant                              {:mvn/version "0.8.0"}
+           integrant/repl                         {:mvn/version "0.3.2"}
+           metosin/reitit                         {:mvn/version "0.5.10"}
+           metosin/muuntaja                       {:mvn/version "0.6.7"}
+           org.clojure/clojure                    {:mvn/version "1.10.1"}
            org.clojure/clojurescript              {:mvn/version "1.10.339"}
+           org.postgresql/postgresql              {:mvn/version "42.2.18"}
+           ragtime/ragtime                        {:mvn/version "0.8.0"}
            ring/ring-core                         {:mvn/version "1.8.2"}
            ring/ring-jetty-adapter                {:mvn/version "1.8.2"}
            ring-cors/ring-cors                    {:mvn/version "0.1.13"}
-           metosin/reitit                         {:mvn/version "0.5.10"}
-           metosin/muuntaja                       {:mvn/version "0.6.7"}
-           seancorfield/next.jdbc                 {:mvn/version "1.1.613"}
-           com.layerware/hugsql-core              {:mvn/version "0.5.1"}
-           com.layerware/hugsql-adapter-next-jdbc {:mvn/version "0.5.1"}
-           org.postgresql/postgresql              {:mvn/version "42.2.18"}
-           ragtime/ragtime                        {:mvn/version "0.8.0"}
-           integrant                              {:mvn/version "0.8.0"}
-           integrant/repl                         {:mvn/version "0.3.2"}
-           environ/environ                        {:mvn/version "1.2.0"}}
+           seancorfield/next.jdbc                 {:mvn/version "1.1.613"}}
  :aliases {:test      {:extra-paths ["test/clj"]
                        :extra-deps  {lambdaisland/kaocha {:mvn/version "1.0-612"}}
                        :main-opts   ["-m" "kaocha.runner"]}

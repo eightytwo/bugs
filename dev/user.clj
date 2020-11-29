@@ -4,7 +4,7 @@
             [ragtime.jdbc :as jdbc]
             [ragtime.repl :as rt-repl]))
 
-(def config (system/read-config "resources/config.edn"))
+(def config (system/read-config "resources/system.edn"))
 
 (ig-repl/set-prep!
   (fn [] config))

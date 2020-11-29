@@ -3,9 +3,10 @@
             [hugsql.core :as hugsql]
             [hugsql.adapter.next-jdbc :as next-adapter]
             [integrant.core :as ig]
-            [next.jdbc :as jdbc]
+            [next.jdbc.connection :as connection]
             [ring.adapter.jetty :as jetty]
-            [bugs.core :as core]))
+            [bugs.core :as core])
+  (:import  (com.mchange.v2.c3p0 ComboPooledDataSource)))
 
 (defn read-config
   [config-file]
@@ -30,10 +31,13 @@
 
 (defmethod ig/init-key :bugs/db [_ db]
   (hugsql/set-adapter! (next-adapter/hugsql-adapter-next-jdbc))
-  (jdbc/get-datasource db))
+  (connection/->pool ComboPooledDataSource db))
 
 (defmethod ig/halt-key! :bugs/jetty [_ jetty]
   (.stop jetty))
+
+(defmethod ig/halt-key! :bugs/db [_ db]
+  (.close db))
 
 (defn -main
   [config-file]
@@ -41,4 +45,4 @@
     (-> config ig/prep ig/init)))
 
 (comment
-  (-main "resources/config.edn"))
+  (-main "resources/system.edn"))
