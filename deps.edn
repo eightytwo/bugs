@@ -1,5 +1,6 @@
 {:paths   ["src/clj" "src/cljs" "resources"]
- :deps    {com.layerware/hugsql-core              {:mvn/version "0.5.1"}
+ :deps    {camel-snake-kebab                      {:mvn/version "0.4.2"}
+           com.layerware/hugsql-core              {:mvn/version "0.5.1"}
            com.layerware/hugsql-adapter-next-jdbc {:mvn/version "0.5.1"}
            com.mchange/c3p0                       {:mvn/version "0.9.5.5"}
            environ/environ                        {:mvn/version "1.2.0"}

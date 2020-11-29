@@ -1,7 +1,7 @@
 (ns bugs.bugs.schemas)
 
 (def bug
-  {:id int? :name string?})
+  {:id int? :name string? :short-description string?})
 
 (def new-bug
   (dissoc bug :id))

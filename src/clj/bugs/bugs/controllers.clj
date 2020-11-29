@@ -20,4 +20,4 @@
         body (:body (:parameters req))
         bug (first (queries/insert-bug db body))]
     {:status 200
-     :body   (dissoc bug :created_at)}))
+     :body   (dissoc bug :created-at)}))
