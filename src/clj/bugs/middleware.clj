@@ -1,5 +1,15 @@
 (ns bugs.middleware
-  (:require [next.jdbc :as jdbc]))
+  (:require [next.jdbc :as jdbc]
+            [clojure.string :as str]))
+
+(def api-subdomain-to-path
+  {:name    ::api-subdomain-to-path
+   :compile (fn [_ _]
+              (fn [handler _]
+                (fn [req]
+                  (if (str/starts-with? (:server-name req) "api.")
+                    (handler (assoc req :uri (str "/api" (:uri req))))
+                    (handler req)))))})
 
 (def db
   {:name    ::db

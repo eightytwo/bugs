@@ -9,6 +9,7 @@
             [reitit.swagger-ui :as swagger-ui]
             [reitit.ring.coercion :as coercion]
             [reitit.dev.pretty :as pretty]
+            ; [reitit.ring.middleware.dev :as dev-middleware]
             [reitit.ring.middleware.muuntaja :as muuntaja]
             [reitit.ring.middleware.exception :as exception]
             [reitit.ring.middleware.multipart :as multipart]
@@ -21,24 +22,40 @@
                             :description "The HTTP API for the Bugs application"}}
            :handler (swagger/create-swagger-handler)}}]
 
-   ["/bugs"
-    {:swagger {:tags ["bugs"]}}
+   ["/api"
+    ["/bugs"
+     {:swagger {:tags ["bugs"]}}
 
-    [""
-     {:get  {:summary   "Retrieve all of your bugs"
-             :responses {200 bugs-schemas/get-bugs-response}
-             :handler   bugs-controllers/get-bugs}
+     [""
+      {:get  {:summary   "Retrieve all of your bugs"
+              :responses {200 bugs-schemas/get-bugs-response}
+              :handler   bugs-controllers/get-bugs}
 
-      :post {:summary    "Add a bug to your collection"
-             :parameters bugs-schemas/post-bugs-request
-             :responses  {200 bugs-schemas/post-bugs-response}
-             :handler    bugs-controllers/post-bugs}}]
+       :post {:summary    "Add a bug to your collection"
+              :parameters bugs-schemas/post-bugs-request
+              :responses  {200 bugs-schemas/post-bugs-response}
+              :handler    bugs-controllers/post-bugs}}]
 
-    ["/:id"
-     {:get  {:summary    "Get a bug by its id"
+     ["/:id"
+      {:get {:summary    "Get a bug by its id"
              :parameters bugs-schemas/get-bug-request
              :responses  {200 bugs-schemas/get-bug-response}
-             :handler    bugs-controllers/get-bug}}]]])
+             :handler    bugs-controllers/get-bug}}]]]
+   [""
+    {:no-doc true}
+
+    ["/"
+     {:get {:summary "The homepage"
+            :handler (fn [_]
+                       {:status  200
+                        :headers {"Content-Type" "text/html"}
+                        :body    "<h1>Hello, world!</h1>"})}}]
+    ["/bugs"
+     {:get {:summary "Display your bugs"
+            :handler (fn [_]
+                       {:status  200
+                        :headers {"Content-Type" "text/html"}
+                        :body    "<h1>All of your bugs!</h1>"})}}]]])
 
 (def exception-middleware
   (exception/create-exception-middleware
@@ -76,10 +93,13 @@
                                           ;; multipart
                                           multipart/multipart-middleware
                                           ;; inject the database into the handler
-                                          middleware/db]}})
+                                          middleware/db]}
+                  ;:reitit.middleware/transform dev-middleware/print-request-diffs
+})
    (ring/routes
     (swagger-ui/create-swagger-ui-handler
-     {:path   "/"
+     {:path   "/api-docs"
       :config {:validatorUrl     nil
                :operationsSorter "alpha"}})
-    (ring/create-default-handler))))
+    (ring/create-default-handler))
+   {:middleware [[middleware/api-subdomain-to-path :api-subdomain-to-path]]}))
