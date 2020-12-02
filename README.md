@@ -88,25 +88,8 @@ Using `pre-commit` is entirely optional but it's very helpful when working in a 
     $ pre-commit install
     ```
 
-## Options
-
-FIXME: listing of options this app accepts.
-
-## Examples
-
-...
-
-### Bugs
-
-...
-
-### Any Other Sections
-### That You Think
-### Might be Useful
-
 ## License
 
 Copyright © 2020 eightytwo
 
-Distributed under the Eclipse Public License either version 1.0 or (at
-your option) any later version.
+This project is licensed under the AGPLv3 licence. See the [LICENSE](LICENSE) file for details.
