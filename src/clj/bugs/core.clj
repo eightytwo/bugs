@@ -13,7 +13,8 @@
             [reitit.ring.middleware.muuntaja :as muuntaja]
             [reitit.ring.middleware.exception :as exception]
             [reitit.ring.middleware.multipart :as multipart]
-            [reitit.ring.middleware.parameters :as parameters]))
+            [reitit.ring.middleware.parameters :as parameters]
+            [selmer.parser :as selmer]))
 
 (def routes
   [["/swagger.json"
@@ -49,13 +50,11 @@
             :handler (fn [_]
                        {:status  200
                         :headers {"Content-Type" "text/html"}
-                        :body    "<h1>Hello, world!</h1>"})}}]
+                        :body    (selmer/render "Hello, {{name}}!" {:name "world"})})}}]
     ["/bugs"
      {:get {:summary "Display your bugs"
-            :handler (fn [_]
-                       {:status  200
-                        :headers {"Content-Type" "text/html"}
-                        :body    "<h1>All of your bugs!</h1>"})}}]]])
+            :handler (fn [req]
+                       (bugs-controllers/html req bugs-controllers/get-bugs "bugs.html"))}}]]])
 
 (def exception-middleware
   (exception/create-exception-middleware

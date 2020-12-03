@@ -1,5 +1,6 @@
 (ns bugs.bugs.controllers
-  (:require [bugs.db :as queries]))
+  (:require [bugs.db :as queries]
+            [selmer.parser :as selmer]))
 
 (defn get-bugs
   [req]
@@ -21,3 +22,9 @@
         bug (first (queries/insert-bug db body))]
     {:status 200
      :body   (dissoc bug :created-at)}))
+
+(defn html
+  [req func template]
+  {:status  200
+   :headers {"Content-Type" "text/html"}
+   :body    (selmer/render-file template {:data (:body (func req))})})

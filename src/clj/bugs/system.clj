@@ -1,11 +1,12 @@
 (ns bugs.system
-  (:require [environ.core :refer [env]]
+  (:require [bugs.core :as core]
+            [environ.core :refer [env]]
             [hugsql.core :as hugsql]
             [hugsql.adapter.next-jdbc :as next-adapter]
             [integrant.core :as ig]
             [next.jdbc.connection :as connection]
             [ring.adapter.jetty :as jetty]
-            [bugs.core :as core])
+            [selmer.parser :as selmer])
   (:import  (com.mchange.v2.c3p0 ComboPooledDataSource)))
 
 (defn read-config
@@ -32,6 +33,9 @@
 (defmethod ig/init-key :bugs/db [_ db]
   (hugsql/set-adapter! (next-adapter/hugsql-adapter-next-jdbc))
   (connection/->pool ComboPooledDataSource db))
+
+(defmethod ig/init-key :bugs/selma [_ selma_config]
+  (selmer/set-resource-path! (:templates-dir selma_config)))
 
 (defmethod ig/halt-key! :bugs/jetty [_ jetty]
   (.stop jetty))
