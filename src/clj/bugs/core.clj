@@ -101,5 +101,6 @@
      {:path   "/api-docs"
       :config {:validatorUrl     nil
                :operationsSorter "alpha"}})
+    (ring/redirect-trailing-slash-handler)
     (ring/create-default-handler))
    {:middleware [[middleware/api-subdomain-to-path :api-subdomain-to-path]]}))
