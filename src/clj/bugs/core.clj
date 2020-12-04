@@ -50,11 +50,13 @@
             :handler (fn [_]
                        {:status  200
                         :headers {"Content-Type" "text/html"}
-                        :body    (selmer/render "Hello, {{name}}!" {:name "world"})})}}]
+                        :body    (selmer/render-file
+                                  "index.html" {:data "world"})})}}]
     ["/bugs"
      {:get {:summary "Display your bugs"
             :handler (fn [req]
-                       (bugs-controllers/html req bugs-controllers/get-bugs "bugs.html"))}}]]])
+                       (bugs-controllers/html
+                        req bugs-controllers/get-bugs "bugs.html"))}}]]])
 
 (def exception-middleware
   (exception/create-exception-middleware
@@ -91,7 +93,7 @@
                                           coercion/coerce-request-middleware
                                           ;; multipart
                                           multipart/multipart-middleware
-                                          ;; inject the database into the handler
+                                          ;; add the database to the request
                                           middleware/db]}
                   ;:reitit.middleware/transform dev-middleware/print-request-diffs
 })
