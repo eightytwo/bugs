@@ -16,7 +16,7 @@
 
                     ;; If the call is to example.com/api then redirect to api.example.com,
                     ;; otherwise let it pass through.
-                    (if (str/starts-with? (:uri req) "/api")
+                    (if (str/starts-with? (:uri req) "/api/")
                       (let [host (get-in req [:headers "host"])
                             new-url (str/replace-first (request/request-url req)
                                                        (str host "/api")
