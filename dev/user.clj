@@ -1,14 +1,13 @@
 (ns user
   (:require [bugs.system :as system]
             [integrant.repl :as ig-repl]
+            [integrant.repl.state :as ig-state]
             [ragtime.jdbc :as jdbc]
             [ragtime.repl :as rt-repl]))
 
-(def config (system/read-config "resources/system.edn"))
+(ig-repl/set-prep! #(system/prep :dev))
 
-(ig-repl/set-prep!
-  (fn [] config))
-
+(def config ig-state/config)
 (def go ig-repl/go)
 (def halt ig-repl/halt)
 (def reset ig-repl/reset)

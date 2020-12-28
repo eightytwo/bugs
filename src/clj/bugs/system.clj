@@ -1,6 +1,7 @@
 (ns bugs.system
-  (:require [bugs.core :as core]
-            [environ.core :refer [env]]
+  (:require [aero.core :as aero]
+            [bugs.core :as core]
+            [clojure.java.io :as io]
             [hugsql.core :as hugsql]
             [hugsql.adapter.next-jdbc :as next-adapter]
             [integrant.core :as ig]
@@ -9,26 +10,25 @@
             [selmer.parser :as selmer])
   (:import  (com.mchange.v2.c3p0 ComboPooledDataSource)))
 
-(defn read-config
-  [config-file]
-  (-> config-file slurp ig/read-string))
+(defmethod aero/reader 'ig/ref
+  [_ _ value]
+  (ig/ref value))
 
-(defmethod ig/prep-key :bugs/jetty
-  [_ config]
-  (if (env :port)
-    (merge config {:port (Integer/parseInt (env :port))})
+(defn config
+  [profile]
+  (aero/read-config (io/resource "system.edn") {:profile profile}))
+
+(defn prep [profile]
+  (let [config (config profile)]
+    (ig/load-namespaces config)
     config))
-
-(defmethod ig/prep-key :bugs/db
-  [_ config]
-  (merge config {:jdbc-url (env :jdbc-bugs-url)}))
 
 (defmethod ig/init-key :bugs/jetty [_ {:keys [handler port]}]
   (println (str "\nServer running on port " port))
   (jetty/run-jetty handler {:port port :join? false}))
 
-(defmethod ig/init-key :bugs/handler [_ {:keys [db]}]
-  (core/create-app db))
+(defmethod ig/init-key :bugs/handler [_ {:keys [profile db]}]
+  (core/create-app profile db))
 
 (defmethod ig/init-key :bugs/db [_ db]
   (hugsql/set-adapter! (next-adapter/hugsql-adapter-next-jdbc))
@@ -44,9 +44,8 @@
   (.close db))
 
 (defn -main
-  [config-file]
-  (let [config (read-config config-file)]
-    (-> config ig/prep ig/init)))
+  [profile]
+  (-> (prep profile) ig/prep ig/init))
 
 (comment
-  (-main "resources/system.edn"))
+  (-main :dev))

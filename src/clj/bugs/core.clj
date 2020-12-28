@@ -1,20 +1,15 @@
 (ns bugs.core
   (:require [bugs.bugs.controllers :as bugs-controllers]
             [bugs.bugs.schemas :as bugs-schemas]
+            [bugs.layout :as layout]
             [bugs.middleware :as middleware]
             [muuntaja.core :as m]
             [reitit.ring :as ring]
             [reitit.coercion.spec]
             [reitit.swagger :as swagger]
             [reitit.swagger-ui :as swagger-ui]
-            [reitit.ring.coercion :as coercion]
             [reitit.dev.pretty :as pretty]
-            ; [reitit.ring.middleware.dev :as dev-middleware]
-            [reitit.ring.middleware.muuntaja :as muuntaja]
-            [reitit.ring.middleware.exception :as exception]
-            [reitit.ring.middleware.multipart :as multipart]
-            [reitit.ring.middleware.parameters :as parameters]
-            [selmer.parser :as selmer]))
+            [reitit.ring.middleware.dev :as ring-middleware]))
 
 (def routes
   [["/swagger.json"
@@ -42,61 +37,35 @@
              :parameters bugs-schemas/get-bug-request
              :responses  {200 bugs-schemas/get-bug-response}
              :handler    bugs-controllers/get-bug}}]]]
+
    [""
-    {:no-doc true}
+    {:no-doc true
+     :middleware [middleware/wrap-csrf]}
 
     ["/"
      {:get {:summary "The homepage"
-            :handler (fn [_]
-                       {:status  200
-                        :headers {"Content-Type" "text/html"}
-                        :body    (selmer/render-file
-                                  "index.html" {:data "world"})})}}]
+            :handler (fn [req] (layout/render req "index.html" {:data "world"}))}}]
+
     ["/bugs"
      {:get {:summary "Display your bugs"
             :handler (fn [req]
-                       (bugs-controllers/html
-                        req bugs-controllers/get-bugs "bugs.html"))}}]]])
+                       (layout/render
+                        req
+                        "bugs.html"
+                        {:data (:body (bugs-controllers/get-bugs req))}))}}]]])
 
-(def exception-middleware
-  (exception/create-exception-middleware
-   (merge
-    exception/default-handlers
-    {;; print stack-traces for all exceptions
-     ::exception/wrap (fn [handler e request]
-                          ;; TODO: better exception handling
-                        (println e)
-                        (handler e request))})))
-
-(defn create-app [db]
+(defn create-app [profile db]
   (ring/ring-handler
    (ring/router routes
                 {:exception pretty/exception
                  :data      {:db         db
                              :coercion   reitit.coercion.spec/coercion
                              :muuntaja   m/instance
-                             :middleware [;; swagger feature
-                                          swagger/swagger-feature
-                                          ;; query-params & form-params
-                                          parameters/parameters-middleware
-                                          ;; content-negotiation
-                                          muuntaja/format-negotiate-middleware
-                                          ;; encoding response body
-                                          muuntaja/format-response-middleware
-                                          ;; exception handling
-                                          exception-middleware
-                                          ;; decoding request body
-                                          muuntaja/format-request-middleware
-                                          ;; coercing response bodys
-                                          coercion/coerce-response-middleware
-                                          ;; coercing request parameters
-                                          coercion/coerce-request-middleware
-                                          ;; multipart
-                                          multipart/multipart-middleware
-                                          ;; add the database to the request
-                                          middleware/db]}
-                  ;:reitit.middleware/transform dev-middleware/print-request-diffs
-})
+                             :middleware middleware/route-middleware}
+                 :reitit.middleware/transform
+                 (if (= profile :dev)
+                   ring-middleware/print-request-diffs
+                   identity)})
    (ring/routes
     (swagger-ui/create-swagger-ui-handler
      {:path   "/api-docs"
@@ -104,4 +73,4 @@
                :operationsSorter "alpha"}})
     (ring/redirect-trailing-slash-handler)
     (ring/create-default-handler))
-   {:middleware [[middleware/api-subdomain-to-path :api-subdomain-to-path]]}))
+   {:middleware (middleware/handler-middleware profile)}))
