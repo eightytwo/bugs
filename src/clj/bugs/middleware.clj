@@ -15,6 +15,8 @@
             [selmer.middleware :as selmer]))
 
 (def db
+  "Middleware that opens a database transaction and adds it
+  to the request map."
   {:name    ::db
    :compile (fn [{:keys [db]} _]
               (fn [handler]
@@ -23,7 +25,7 @@
                     (handler (assoc req :db tx))))))})
 
 (def api-subdomain-to-path
-  "Redirects requests to example.com/api/ to api.example.com."
+  "Middlware that redirects requests example.com/api/ to api.example.com."
   (fn [handler]
     (fn [req]
       ;; If the call is to api.example.com then append the /api directory.
@@ -58,6 +60,7 @@
 
 ;; Middleware that wraps all routes
 (def route-middleware
+  "The middleware listed here will be applied to all routes."
   [;; swagger feature
    swagger/swagger-feature
    ;; query-params & form-params
@@ -81,19 +84,20 @@
 
 ;; Middleware that wraps the ring handler
 (def base-handler-middleware
-  "The middleware listed here will be applied in all environments."
+  "The middleware listed here will be applied to the ring handler
+  in all environments."
   ; [[api-subdomain-to-path]]
   [])
 
 (def dev-handler-middleware
-  "The middleware listed here is only for the dev environment."
+  "The middleware listed here for the ring handler will only be applied
+  in the dev environment."
   [[wrap-prone]
    [selmer/wrap-error-page]
    [reload/wrap-reload]])
 
 (defn handler-middleware
-  "Provides all middleware to be applied to the handler,
-  based on the environment."
+  "The middleware to be applied to the handler, based on the environment."
   [profile]
   (-> base-handler-middleware
       (cond-> (= profile :dev)
