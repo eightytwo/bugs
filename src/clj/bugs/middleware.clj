@@ -9,10 +9,16 @@
             [reitit.ring.middleware.parameters :as parameters]
             [reitit.swagger :as swagger]
             [ring.middleware.anti-forgery :as anti-forgery]
+            [ring.middleware.defaults :refer [site-defaults wrap-defaults]]
             [ring.middleware.reload :as reload]
             [ring.util.request :as request]
             [ring.util.response :as response]
             [selmer.middleware :as selmer]))
+
+(defn api-request?
+  "Helper function to determine if a request is for the API or from a browser."
+  [req]
+  (str/starts-with? (:uri req) "/api/"))
 
 (def db
   "Middleware that opens a database transaction and adds it
@@ -35,7 +41,7 @@
 
         ;; If the call is to example.com/api then redirect to api.example.com,
         ;; otherwise let it pass through.
-        (if (str/starts-with? (:uri req) "/api/")
+        (if (api-request? req)
           (let [host (get-in req [:headers "host"])
                 new-url (str/replace-first (request/request-url req)
                                            (str host "/api")
@@ -54,9 +60,51 @@
      {:status 403
       :title "Invalid anti-forgery token"})}))
 
-(def wrap-prone
+(def wrap-ring-defaults
   (fn [handler]
-    (prone/wrap-exceptions handler {:app-namespaces ['bugs]})))
+    (wrap-defaults
+     handler
+     (-> site-defaults
+         (assoc-in [:security :anti-forgery] false)))))
+
+(def wrap-prone
+  "Use prone for displaying errors nicely in the browser."
+  (fn [handler]
+    (prone/wrap-exceptions
+     handler
+     {:app-namespaces ['bugs]
+      :skip-prone?    (fn [req] (api-request? req))})))
+
+(defn handle-dev-exception
+  "Handle uncaught exceptions in the development environment."
+  [handler]
+  (fn [req]
+    (try
+      (handler req)
+      (catch Exception e
+        (layout/error-json {:status 500 :error (Throwable->map e)})))))
+
+(def handle-production-exception
+  "Handle uncaught exceptions in the production environment."
+  (fn [handler]
+    (fn [req]
+      (try
+        (handler req)
+        (catch Throwable _
+          (let [error
+                {:status  500
+                 :title   "Well, that's embarrassing!"
+                 :message "It looks like an unsolved bug reared its head."}]
+            (if (api-request? req)
+              (layout/error-json error)
+              (layout/error-page error))))))))
+
+(defn wrap-exceptions
+  "Middleware that handles any uncaught exceptions based on the environment."
+  [profile]
+  (if (= profile :dev)
+    handle-dev-exception
+    handle-production-exception))
 
 ;; Middleware that wraps all routes
 (def route-middleware
@@ -69,8 +117,6 @@
    muuntaja/format-negotiate-middleware
    ;; encoding response body
    muuntaja/format-response-middleware
-   ;; exception handling
-   ; exception/exception-middleware
    ;; decoding request body
    muuntaja/format-request-middleware
    ;; coercing response bodys
@@ -79,26 +125,44 @@
    coercion/coerce-request-middleware
    ;; multipart
    multipart/multipart-middleware
-   ;; add the database to the request, specifically a db transaction
+   ;; Add the database to the request, specifically a db transaction
    db])
 
 ;; Middleware that wraps the ring handler
-(def base-handler-middleware
+(defn base-handler-middleware
   "The middleware listed here will be applied to the ring handler
   in all environments."
-  ; [[api-subdomain-to-path]]
-  [])
+  [profile]
+  ;; ----------
+  ;; The middleware in the vector below is applied to the request from
+  ;; bottom to top. This means the first item in the vector (the outermost
+  ;; layer of the wrapping) will be executed first.
+  ;; ----------
+  [;; Redirect example.com/api to api.example.com
+   [api-subdomain-to-path]
+   ;; Apply industry standard defaults for web applications
+   [wrap-ring-defaults]
+   ;; Handle any exceptions gracefully
+   [(wrap-exceptions profile)]])
 
 (def dev-handler-middleware
   "The middleware listed here for the ring handler will only be applied
   in the dev environment."
-  [[wrap-prone]
+  ;; ----------
+  ;; The middleware in the vector below is applied to the request from
+  ;; bottom to top. This means the first item in the vector (the outermost
+  ;; layer of the wrapping) will be executed first.
+  ;; ----------
+  [;; Present errors and stacktraces nicely in the browser
+   [wrap-prone]
+   ;; Present HTML template errors nicely in the browser
    [selmer/wrap-error-page]
+   ;; Reload Clojure code when changed
    [reload/wrap-reload]])
 
 (defn handler-middleware
   "The middleware to be applied to the handler, based on the environment."
   [profile]
-  (-> base-handler-middleware
+  (-> (base-handler-middleware profile)
       (cond-> (= profile :dev)
         (concat dev-handler-middleware))))
