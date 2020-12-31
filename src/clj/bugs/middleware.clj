@@ -8,6 +8,7 @@
             [reitit.ring.middleware.multipart :as multipart]
             [reitit.ring.middleware.parameters :as parameters]
             [reitit.swagger :as swagger]
+            [ring.adapter.undertow.middleware.session :as session]
             [ring.middleware.anti-forgery :as anti-forgery]
             [ring.middleware.defaults :refer [site-defaults wrap-defaults]]
             [ring.middleware.reload :as reload]
@@ -60,12 +61,17 @@
      {:status 403
       :title "Invalid anti-forgery token"})}))
 
+(def wrap-session
+  (fn [handler]
+    (session/wrap-session handler {:http-only true})))
+
 (def wrap-ring-defaults
   (fn [handler]
     (wrap-defaults
      handler
      (-> site-defaults
-         (assoc-in [:security :anti-forgery] false)))))
+         (assoc-in [:security :anti-forgery] false)
+         (dissoc :session)))))
 
 (def wrap-prone
   "Use prone for displaying errors nicely in the browser."
@@ -132,7 +138,8 @@
   [profile]
   (-> [[(wrap-exceptions profile)]         ;; Handle any exceptions gracefully
        [api-subdomain-to-path]             ;; Redirect example.com/api to api.example.com
-       [wrap-ring-defaults]]               ;; Apply industry standard defaults
+       [wrap-ring-defaults]                ;; Apply industry standard defaults
+       [wrap-session]]                     ;; Enable session handling
       (cond-> (= profile :dev)
         (concat [[wrap-prone]              ;; Present exceptions nicely in the browser
                  [selmer/wrap-error-page]  ;; Present HTML template errors nicely
