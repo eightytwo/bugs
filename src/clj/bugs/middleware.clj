@@ -126,12 +126,10 @@
   layer of the wrapping) will be the first to process a request and
   be the last to touch the response."
   [profile]
-  (concat
-   [[api-subdomain-to-path]      ;; Redirect example.com/api to api.example.com
-    [wrap-ring-defaults]         ;; Apply industry standard defaults
-    [(wrap-exceptions profile)]] ;; Handle any exceptions gracefully
-   (if (= profile :dev)
-     [[wrap-prone]               ;; Present exceptions nicely in the browser
-      [selmer/wrap-error-page]   ;; Present HTML template errors nicely
-      [reload/wrap-reload]]      ;; Reload Clojure code when changed
-     [])))
+  (-> [[api-subdomain-to-path]             ;; Redirect example.com/api to api.example.com
+       [wrap-ring-defaults]                ;; Apply industry standard defaults
+       [(wrap-exceptions profile)]]        ;; Handle any exceptions gracefully
+      (cond-> (= profile :dev)
+        (concat [[wrap-prone]              ;; Present exceptions nicely in the browser
+                 [selmer/wrap-error-page]  ;; Present HTML template errors nicely
+                 [reload/wrap-reload]])))) ;; Reload Clojure code when changed
