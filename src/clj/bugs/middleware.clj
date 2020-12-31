@@ -9,9 +9,10 @@
             [reitit.ring.middleware.parameters :as parameters]
             [reitit.swagger :as swagger]
             [ring.adapter.undertow.middleware.session :as session]
-            [ring.middleware.anti-forgery :as anti-forgery]
+            [ring.middleware.anti-forgery :refer [wrap-anti-forgery]]
             [ring.middleware.defaults :refer [site-defaults wrap-defaults]]
-            [ring.middleware.reload :as reload]
+            [ring.middleware.flash :refer [wrap-flash]]
+            [ring.middleware.reload :refer [wrap-reload]]
             [ring.util.request :as request]
             [ring.util.response :as response]
             [selmer.middleware :as selmer]))
@@ -54,7 +55,7 @@
           (handler req))))))
 
 (defn wrap-csrf [handler]
-  (anti-forgery/wrap-anti-forgery
+  (wrap-anti-forgery
    handler
    {:error-response
     (layout/error-page
@@ -139,8 +140,9 @@
   (-> [[(wrap-exceptions profile)]         ;; Handle any exceptions gracefully
        [api-subdomain-to-path]             ;; Redirect example.com/api to api.example.com
        [wrap-ring-defaults]                ;; Apply industry standard defaults
-       [wrap-session]]                     ;; Enable session handling
+       [wrap-session]                      ;; Enable session handling
+       [wrap-flash]]                       ;; Enable flash sessions
       (cond-> (= profile :dev)
         (concat [[wrap-prone]              ;; Present exceptions nicely in the browser
                  [selmer/wrap-error-page]  ;; Present HTML template errors nicely
-                 [reload/wrap-reload]])))) ;; Reload Clojure code when changed
+                 [wrap-reload]]))))        ;; Reload Clojure code when changed
