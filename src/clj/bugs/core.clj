@@ -12,13 +12,25 @@
             [reitit.ring.middleware.dev :as ring-middleware]))
 
 (def routes
-  [["/swagger.json"
-    {:get {:no-doc  true
-           :swagger {:info {:title       "Bugs API"
-                            :description "The HTTP API for the Bugs application"}}
-           :handler (swagger/create-swagger-handler)}}]
+  [["/api"
+    {:coercion   reitit.coercion.spec/coercion
+     :muuntaja   m/instance
+     :swagger    {:id ::api}
+     :middleware middleware/api-routes-middleware}
 
-   ["/api"
+    [""
+     {:no-doc  true
+      :swagger {:info {:title       "Bugs API"
+                       :description "The HTTP API for the Bugs application"}}}
+
+     ["/swagger.json"
+      {:get (swagger/create-swagger-handler)}]
+
+     ["/docs/*"
+      {:get (swagger-ui/create-swagger-ui-handler
+             {:url "/api/swagger.json"
+              :config {:validator-url nil}})}]]
+
     ["/bugs"
      {:swagger {:tags ["bugs"]}}
 
@@ -40,7 +52,7 @@
 
    [""
     {:no-doc true
-     :middleware [middleware/wrap-csrf]}
+     :middleware middleware/web-routes-middleware}
 
     ["/"
      {:get {:summary "The homepage"
@@ -58,19 +70,12 @@
   (ring/ring-handler
    (ring/router routes
                 {:exception pretty/exception
-                 :data      {:db         db
-                             :coercion   reitit.coercion.spec/coercion
-                             :muuntaja   m/instance
-                             :middleware middleware/route-middleware}
+                 :data      {:db db}
                  :reitit.middleware/transform
                  (if (= profile :dev)
                    ring-middleware/print-request-diffs
                    identity)})
    (ring/routes
-    (swagger-ui/create-swagger-ui-handler
-     {:path   "/api-docs"
-      :config {:validatorUrl     nil
-               :operationsSorter "alpha"}})
     (ring/redirect-trailing-slash-handler)
     (ring/create-default-handler))
    {:middleware (middleware/handler-middleware profile)}))

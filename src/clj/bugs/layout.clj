@@ -1,6 +1,6 @@
 (ns bugs.layout
-  (:require [cheshire.core :as cheshire]
-            [clojure.java.io]
+  (:require [clojure.java.io]
+            [jsonista.core :as j]
             [selmer.parser :as parser]
             [ring.util.anti-forgery :refer [anti-forgery-field]]
             [ring.middleware.anti-forgery :refer [*anti-forgery-token*]]
@@ -29,4 +29,4 @@
   [error]
   {:status  (:status error)
    :headers {"Content-Type" "application/json; charset=utf-8"}
-   :body    (cheshire/generate-string (dissoc error :status))})
+   :body    (j/write-value-as-string (dissoc (:error error) :via))})

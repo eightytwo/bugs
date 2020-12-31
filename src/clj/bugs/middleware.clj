@@ -13,14 +13,12 @@
             [ring.middleware.defaults :refer [site-defaults wrap-defaults]]
             [ring.middleware.flash :refer [wrap-flash]]
             [ring.middleware.reload :refer [wrap-reload]]
-            [ring.util.request :as request]
-            [ring.util.response :as response]
             [selmer.middleware :as selmer]))
 
 (defn api-request?
   "Helper function to determine if a request is for the API or from a browser."
   [req]
-  (str/starts-with? (:server-name req) "api."))
+  (str/starts-with? (:uri req) "/api/"))
 
 (def db
   "Middleware that opens a database transaction and adds it
@@ -31,28 +29,6 @@
                 (fn [req]
                   (jdbc/with-transaction [tx db]
                     (handler (assoc req :db tx))))))})
-
-(def api-subdomain-to-path
-  "Middlware that redirects requests example.com/api/ to api.example.com."
-  (fn [handler]
-    (fn [req]
-      ;; If the call is to api.example.com then append the /api directory.
-      ;; This is needed because all API routes fall under /api.
-      (if (api-request? req)
-        (handler (assoc req :uri (str "/api" (:uri req))))
-
-        ;; If the call is to example.com/api then redirect to api.example.com,
-        ;; otherwise let it pass through.
-        (if (str/starts-with? (:uri req) "/api/")
-          (let [host (get-in req [:headers "host"])
-                new-url (str/replace-first (request/request-url req)
-                                           (str host "/api")
-                                           (str "api." host))
-                code (if (= (:request-method req) :get)
-                       :moved-permanently
-                       :permanent-redirect)]
-            (response/redirect new-url code))
-          (handler req))))))
 
 (defn wrap-csrf [handler]
   (wrap-anti-forgery
@@ -117,7 +93,7 @@
     handle-dev-exception
     handle-production-exception))
 
-(def route-middleware
+(def api-routes-middleware
   "The middleware listed here will be applied to all routes."
   [swagger/swagger-feature               ;; swagger feature
    parameters/parameters-middleware      ;; query-params & form-params
@@ -130,6 +106,10 @@
    multipart/multipart-middleware        ;; multipart
    db])                                  ;; provide a database transaction
 
+(def web-routes-middleware
+  [wrap-csrf
+   db])
+
 (defn handler-middleware
   "The middleware to be applied to the ring handler.
 
@@ -139,7 +119,6 @@
   be the last to touch the response."
   [profile]
   (-> [[(wrap-exceptions profile)]         ;; Handle any exceptions gracefully
-       [api-subdomain-to-path]             ;; Redirect example.com/api to api.example.com
        [wrap-ring-defaults]                ;; Apply industry standard defaults
        [wrap-session]                      ;; Enable session handling
        [wrap-flash]]                       ;; Enable flash sessions
