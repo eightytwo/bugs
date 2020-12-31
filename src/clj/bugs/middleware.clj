@@ -106,63 +106,32 @@
     handle-dev-exception
     handle-production-exception))
 
-;; Middleware that wraps all routes
 (def route-middleware
   "The middleware listed here will be applied to all routes."
-  [;; swagger feature
-   swagger/swagger-feature
-   ;; query-params & form-params
-   parameters/parameters-middleware
-   ;; content-negotiation
-   muuntaja/format-negotiate-middleware
-   ;; encoding response body
-   muuntaja/format-response-middleware
-   ;; decoding request body
-   muuntaja/format-request-middleware
-   ;; coercing response bodys
-   coercion/coerce-response-middleware
-   ;; coercing request parameters
-   coercion/coerce-request-middleware
-   ;; multipart
-   multipart/multipart-middleware
-   ;; Add the database to the request, specifically a db transaction
-   db])
-
-;; Middleware that wraps the ring handler
-(defn base-handler-middleware
-  "The middleware listed here will be applied to the ring handler
-  in all environments."
-  [profile]
-  ;; ----------
-  ;; The middleware in the vector below is applied to the request from
-  ;; bottom to top. This means the first item in the vector (the outermost
-  ;; layer of the wrapping) will be executed first.
-  ;; ----------
-  [;; Redirect example.com/api to api.example.com
-   [api-subdomain-to-path]
-   ;; Apply industry standard defaults for web applications
-   [wrap-ring-defaults]
-   ;; Handle any exceptions gracefully
-   [(wrap-exceptions profile)]])
-
-(def dev-handler-middleware
-  "The middleware listed here for the ring handler will only be applied
-  in the dev environment."
-  ;; ----------
-  ;; The middleware in the vector below is applied to the request from
-  ;; bottom to top. This means the first item in the vector (the outermost
-  ;; layer of the wrapping) will be executed first.
-  ;; ----------
-  [;; Present errors and stacktraces nicely in the browser
-   [wrap-prone]
-   ;; Present HTML template errors nicely in the browser
-   [selmer/wrap-error-page]
-   ;; Reload Clojure code when changed
-   [reload/wrap-reload]])
+  [swagger/swagger-feature               ;; swagger feature
+   parameters/parameters-middleware      ;; query-params & form-params
+   muuntaja/format-negotiate-middleware  ;; content-negotiation
+   muuntaja/format-response-middleware   ;; encoding response body
+   muuntaja/format-request-middleware    ;; decoding request body
+   coercion/coerce-response-middleware   ;; coercing response bodys
+   coercion/coerce-request-middleware    ;; coercing request parameters
+   multipart/multipart-middleware        ;; multipart
+   db])                                  ;; provide a database transaction
 
 (defn handler-middleware
-  "The middleware to be applied to the handler, based on the environment."
+  "The middleware to be applied to the ring handler.
+
+  The middleware in the vector returned is applied to the request from
+  bottom to top. This means the first item in the vector (the outermost
+  layer of the wrapping) will be the first to process a request and
+  be the last to touch the response."
   [profile]
-  (-> (base-handler-middleware profile)
-      (cond-> (= profile :dev)
-        (concat dev-handler-middleware))))
+  (concat
+   [[api-subdomain-to-path]      ;; Redirect example.com/api to api.example.com
+    [wrap-ring-defaults]         ;; Apply industry standard defaults
+    [(wrap-exceptions profile)]] ;; Handle any exceptions gracefully
+   (if (= profile :dev)
+     [[wrap-prone]               ;; Present exceptions nicely in the browser
+      [selmer/wrap-error-page]   ;; Present HTML template errors nicely
+      [reload/wrap-reload]]      ;; Reload Clojure code when changed
+     [])))
