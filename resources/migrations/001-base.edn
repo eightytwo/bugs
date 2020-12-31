@@ -2,6 +2,7 @@
            id serial PRIMARY KEY,
            created_at timestamp without time zone DEFAULT now() NOT NULL,
            name text NOT NULL,
-           short_description text NOT NULL
+           short_description text NOT NULL,
+           rating int NOT NULL
          );"]
  :down ["DROP TABLE bugs;"]}

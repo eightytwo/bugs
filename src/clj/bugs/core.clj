@@ -26,7 +26,7 @@
      ["/swagger.json"
       {:get (swagger/create-swagger-handler)}]
 
-     ["/docs/*"
+     ["/api-docs/*"
       {:get (swagger-ui/create-swagger-ui-handler
              {:url "/api/swagger.json"
               :config {:validator-url nil}})}]]

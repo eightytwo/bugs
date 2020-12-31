@@ -14,7 +14,7 @@
 (def reset-all ig-repl/reset-all)
 
 (def ragtime-config
-  {:datastore  (jdbc/sql-database (:bugs/db config))
+  {:datastore  (jdbc/sql-database {:connection-uri (get-in config [:bugs/db :jdbcUrl])})
    :migrations (jdbc/load-resources "migrations")})
 
 (comment
