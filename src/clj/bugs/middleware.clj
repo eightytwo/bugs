@@ -123,6 +123,7 @@
    parameters/parameters-middleware      ;; query-params & form-params
    muuntaja/format-negotiate-middleware  ;; content-negotiation
    muuntaja/format-response-middleware   ;; encoding response body
+   coercion/coerce-exceptions-middleware ;; handle coercion exceptions
    muuntaja/format-request-middleware    ;; decoding request body
    coercion/coerce-response-middleware   ;; coercing response bodys
    coercion/coerce-request-middleware    ;; coercing request parameters
