@@ -76,7 +76,11 @@
       :skip-prone?    (fn [req] (api-request? req))})))
 
 (defn handle-dev-exception
-  "Handle uncaught exceptions in the development environment."
+  "Handle uncaught exceptions in the development environment.
+
+  prone handles exceptions that occur when the application is accessed via
+  the browser. This function handles exceptions that occur when accessing
+  the application via the API."
   [handler]
   (fn [req]
     (try
