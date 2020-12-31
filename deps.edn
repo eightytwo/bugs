@@ -6,6 +6,7 @@
            com.mchange/c3p0                       {:mvn/version "0.9.5.5"}
            integrant                              {:mvn/version "0.8.0"}
            integrant/repl                         {:mvn/version "0.3.2"}
+           luminus-undertow/luminus-undertow      {:mvn/version "0.1.7"}
            metosin/muuntaja                       {:mvn/version "0.6.7"}
            metosin/reitit                         {:mvn/version "0.5.10"}
            metosin/ring-http-response             {:mvn/version "0.9.1"}
@@ -17,7 +18,6 @@
            ring/ring-core                         {:mvn/version "1.8.2"}
            ring/ring-defaults                     {:mvn/version "0.3.2"}
            ring/ring-devel                        {:mvn/version "1.8.2"}
-           ring/ring-jetty-adapter                {:mvn/version "1.8.2"}
            ring-cors/ring-cors                    {:mvn/version "0.1.13"}
            seancorfield/next.jdbc                 {:mvn/version "1.1.613"}
            selmer                                 {:mvn/version "1.12.31"}}

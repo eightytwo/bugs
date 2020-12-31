@@ -6,7 +6,7 @@
             [hugsql.adapter.next-jdbc :as next-adapter]
             [integrant.core :as ig]
             [next.jdbc.connection :as connection]
-            [ring.adapter.jetty :as jetty]
+            [luminus.http-server :as http]
             [selmer.parser :as selmer])
   (:import  (com.mchange.v2.c3p0 ComboPooledDataSource)))
 
@@ -23,9 +23,9 @@
     (ig/load-namespaces config)
     config))
 
-(defmethod ig/init-key :bugs/jetty [_ {:keys [handler port]}]
+(defmethod ig/init-key :bugs/http-server [_ {:keys [handler port]}]
   (println (str "\nServer running on port " port))
-  (jetty/run-jetty handler {:port port :join? false}))
+  (http/start {:handler handler :port port}))
 
 (defmethod ig/init-key :bugs/handler [_ {:keys [profile db]}]
   (core/create-app profile db))
@@ -37,8 +37,8 @@
 (defmethod ig/init-key :bugs/selma [_ selma_config]
   (selmer/set-resource-path! (:templates-dir selma_config)))
 
-(defmethod ig/halt-key! :bugs/jetty [_ jetty]
-  (.stop jetty))
+(defmethod ig/halt-key! :bugs/http-server [_ server]
+  (.stop server))
 
 (defmethod ig/halt-key! :bugs/db [_ db]
   (.close db))
