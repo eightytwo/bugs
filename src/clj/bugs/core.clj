@@ -5,7 +5,7 @@
             [bugs.middleware :as middleware]
             [muuntaja.core :as m]
             [reitit.ring :as ring]
-            [reitit.coercion.spec]
+            [reitit.coercion.malli :as malli]
             [reitit.swagger :as swagger]
             [reitit.swagger-ui :as swagger-ui]
             [reitit.dev.pretty :as pretty]
@@ -13,7 +13,7 @@
 
 (def routes
   [["/api"
-    {:coercion   reitit.coercion.spec/coercion
+    {:coercion   (malli/create {:error-keys #{:errors}})
      :muuntaja   m/instance
      :swagger    {:id ::api}
      :middleware middleware/api-routes-middleware}

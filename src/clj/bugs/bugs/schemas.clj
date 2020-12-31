@@ -1,16 +1,23 @@
 (ns bugs.bugs.schemas)
 
 (def bug
-  {:id int? :name string? :short-description string? :rating int?})
+  [:map
+   [:id int?]
+   [:name string?]
+   [:short-description string?]
+   [:rating int?]])
 
 (def new-bug
-  (dissoc bug :id))
+  [:map
+   [:name string?]
+   [:short-description string?]
+   [:rating int?]])
 
 (def get-bugs-response
-  {:body [bug]})
+  {:body [:vector bug]})
 
 (def get-bug-request
-  {:path {:id int?}})
+  {:path [:map [:id int?]]})
 
 (def get-bug-response
   {:body bug})
