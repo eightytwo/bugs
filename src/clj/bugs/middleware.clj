@@ -18,7 +18,7 @@
 (defn api-request?
   "Helper function to determine if a request is for the API or from a browser."
   [req]
-  (str/starts-with? (:uri req) "/api/"))
+  (str/starts-with? (:server-name req) "api."))
 
 (def db
   "Middleware that opens a database transaction and adds it
@@ -36,12 +36,12 @@
     (fn [req]
       ;; If the call is to api.example.com then append the /api directory.
       ;; This is needed because all API routes fall under /api.
-      (if (str/starts-with? (:server-name req) "api.")
+      (if (api-request? req)
         (handler (assoc req :uri (str "/api" (:uri req))))
 
         ;; If the call is to example.com/api then redirect to api.example.com,
         ;; otherwise let it pass through.
-        (if (api-request? req)
+        (if (str/starts-with? (:uri req) "/api/")
           (let [host (get-in req [:headers "host"])
                 new-url (str/replace-first (request/request-url req)
                                            (str host "/api")
@@ -130,9 +130,9 @@
   layer of the wrapping) will be the first to process a request and
   be the last to touch the response."
   [profile]
-  (-> [[api-subdomain-to-path]             ;; Redirect example.com/api to api.example.com
-       [wrap-ring-defaults]                ;; Apply industry standard defaults
-       [(wrap-exceptions profile)]]        ;; Handle any exceptions gracefully
+  (-> [[(wrap-exceptions profile)]         ;; Handle any exceptions gracefully
+       [api-subdomain-to-path]             ;; Redirect example.com/api to api.example.com
+       [wrap-ring-defaults]]               ;; Apply industry standard defaults
       (cond-> (= profile :dev)
         (concat [[wrap-prone]              ;; Present exceptions nicely in the browser
                  [selmer/wrap-error-page]  ;; Present HTML template errors nicely
