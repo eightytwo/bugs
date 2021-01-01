@@ -3,7 +3,8 @@
             [integrant.repl :as ig-repl]
             [integrant.repl.state :as ig-state]
             [ragtime.jdbc :as jdbc]
-            [ragtime.repl :as rt-repl]))
+            [ragtime.repl :as rt-repl]
+            hugsql.core))
 
 (ig-repl/set-prep! #(system/prep :dev))
 
@@ -26,3 +27,6 @@
   (halt)
   (reset)
   (reset-all))
+
+(comment
+  (hugsql.core/def-db-fns "sql/bugs.sql"))

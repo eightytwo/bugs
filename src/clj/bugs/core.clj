@@ -3,6 +3,7 @@
             [bugs.bugs.schemas :as bugs-schemas]
             [bugs.layout :as layout]
             [bugs.middleware :as middleware]
+            [camel-snake-kebab.core :as csk]
             [muuntaja.core :as m]
             [reitit.ring :as ring]
             [reitit.coercion.malli :as malli]
@@ -14,7 +15,14 @@
 (def routes
   [["/api"
     {:coercion   (malli/create {:error-keys #{:errors}})
-     :muuntaja   m/instance
+     :muuntaja   (m/create
+                  (-> m/default-options
+                      (assoc-in
+                       [:formats "application/json" :encoder-opts]
+                       {:encode-key-fn csk/->camelCaseString})
+                      (assoc-in
+                       [:formats "application/json" :decoder-opts]
+                       {:decode-key-fn csk/->kebab-case-keyword})))
      :swagger    {:id ::api}
      :middleware middleware/api-routes-middleware}
 
