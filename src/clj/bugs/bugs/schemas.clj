@@ -1,17 +1,16 @@
-(ns bugs.bugs.schemas)
-
-(def bug
-  [:map
-   [:id int?]
-   [:name string?]
-   [:short-description string?]
-   [:rating int?]])
+(ns bugs.bugs.schemas
+  (:require [malli.util :as mu]))
 
 (def new-bug
   [:map
-   [:name string?]
+   [:name [:string {:min 3, :max 8}]]
    [:short-description string?]
-   [:rating int?]])
+   [:tag [:enum "safe" "caution" "dangerous"]]
+   [:age pos-int?]
+   [:rating [:int {:min 1, :max 10}]]])
+
+(def bug
+  (mu/merge new-bug [:map [:id int?]]))
 
 (def get-bugs-response
   {:body [:vector bug]})
