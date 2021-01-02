@@ -10,7 +10,7 @@
 
 (defn render
   "renders the HTML template located relative to resources/html"
-  [_request template & [params]]
+  [template & [params]]
   {:status 200
    :headers {"Content-Type" "text/html; charset=utf-8"}
    :body (parser/render-file

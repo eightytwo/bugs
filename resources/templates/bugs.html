@@ -1,7 +1,56 @@
 <h1>Bugs List</h1>
 
-<ul>
-  {% for bug in data %}
-  <li>{{bug.name}}</li>
+<table>
+  <tr>
+    <th>Name</th>
+    <th>Description</th>
+    <th>Tag</th>
+    <th>Age</th>
+    <th>Rating</th>
+  </tr>
+  {% for bug in bugs %}
+  <tr>
+    <td>{{bug.name}}</td>
+    <td>{{bug.short-description}}</td>
+    <td>{{bug.tag}}</td>
+    <td>{{bug.age}}</td>
+    <td>{{bug.rating}}</td>
+  </tr>
   {% endfor %}
-</ul>
+</table>
+
+<hr />
+
+<form method="POST" action="/bugs">
+  {% csrf-field %}
+  <p>
+    <label for="name">Name:</label>
+    <input id="name" type="text" name="name" value="{{name}}" />
+  </p>
+
+  <p>
+    <label for="description">Description:</label>
+    <textarea id="description" name="short-description">{{short-description}}</textarea>
+  </p>
+
+  <p>
+    <label for="tag">Tag:</label>
+    <select id="tag" name="tag">
+      {% for atag in tags %}
+      <option value="{{atag}}">{{atag}}</option>
+      {% endfor %}
+    </select>
+  </p>
+
+  <p>
+    <label for="age">Age:</label>
+    <input id="age" name="age" type="number">{{age}}</input>
+  </p>
+
+  <p>
+    <label for="rating">Rating:</label>
+    <input id="rating" name="rating" type="number">{{rating}}</input>
+  </p>
+
+  <input type="submit" value="Add bug" />
+</form>

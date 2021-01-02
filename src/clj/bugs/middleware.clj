@@ -108,6 +108,15 @@
 
 (def web-routes-middleware
   [wrap-csrf
+   parameters/parameters-middleware      ;; query-params & form-params
+   muuntaja/format-negotiate-middleware  ;; content-negotiation
+   muuntaja/format-response-middleware   ;; encoding response body
+   ;; replace the below with custom middleware to catch exceptions of type
+   ;; "reitit.coercion.CoercionError" and include in the html form/page
+   coercion/coerce-exceptions-middleware ;; handle coercion exceptions
+   muuntaja/format-request-middleware    ;; decoding request body
+   coercion/coerce-request-middleware    ;; coercing request parameters
+   coercion/coerce-response-middleware   ;; coercing response bodys
    db])
 
 (defn handler-middleware

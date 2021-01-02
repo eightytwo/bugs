@@ -1,23 +1,27 @@
 (ns bugs.bugs.controllers
-  (:require [bugs.db :as queries]))
+  (:require [bugs.db :as queries]
+            [bugs.bugs.schemas :as s]
+            [bugs.bugs.views :as v]))
 
 (defn get-bugs
   [req]
   (let [db (:db req)]
-    {:status 200
-     :body   (queries/get-bugs db)}))
+    (queries/get-bugs db)))
+
+(defn show-bugs
+  [req]
+  (let [bugs (get-bugs req)]
+    (v/bugs-list bugs s/tags)))
 
 (defn get-bug
   [req]
   (let [db (:db req)
         id (:id (:path (:parameters req)))]
-    {:status 200
-     :body   (queries/get-bug-by-id db {:id id})}))
+    (queries/get-bug-by-id db {:id id})))
 
-(defn post-bugs
+(defn create-bug
   [req]
   (let [db (:db req)
-        body (:body (:parameters req))
+        body (val (first (select-keys (:parameters req) [:body :form])))
         bug (first (queries/insert-bug db body))]
-    {:status 200
-     :body   (dissoc bug :created-at)}))
+    (dissoc bug :created-at)))
