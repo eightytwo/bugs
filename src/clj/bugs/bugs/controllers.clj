@@ -16,7 +16,7 @@
 (defn get-bug
   [req]
   (let [db (:db req)
-        id (:id (:path (:parameters req)))]
+        id (get-in req [:parameters :path :id])]
     (queries/get-bug-by-id db {:id id})))
 
 (defn create-bug
