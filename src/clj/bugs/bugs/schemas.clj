@@ -3,17 +3,20 @@
 
 (def tags ["safe" "caution" "dangerous"])
 
-(def bug
+(def new-bug
   [:map
-   [:id int?]
    [:name [:string {:min 3, :max 8}]]
    [:short-description string?]
    [:tag (into [:enum] tags)]
    [:age pos-int?]
    [:rating [:int {:min 1, :max 10}]]])
 
-(def new-bug
-  (mu/dissoc bug :id))
+(def bug
+  (mu/merge
+   new-bug
+   [:map
+    [:id int?]
+    [:created-at inst?]]))
 
 (def get-bugs-response
   {:body [:vector bug]})
