@@ -8,7 +8,7 @@
    [:id int?]
    [:name [:string {:min 3, :max 8}]]
    [:short-description string?]
-   [:tag [:enum "safe" "caution" "dangerous"]]
+   [:tag (into [:enum] tags)]
    [:age pos-int?]
    [:rating [:int {:min 1, :max 10}]]])
 
