@@ -48,7 +48,7 @@
 
     ["/"
      {:get {:summary "The homepage"
-            :handler (fn [req]
-                       (layout/render req "index.html" {:data "world"}))}}]
+            :handler (fn [_]
+                       (layout/render "index.html" {:data "world"}))}}]
 
     bugs-routes/web-routes]])

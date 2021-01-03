@@ -2,6 +2,7 @@
  :deps    {aero/aero                              {:mvn/version "1.1.6"}
            bk/ring-gzip                           {:mvn/version "0.3.0"}
            camel-snake-kebab/camel-snake-kebab    {:mvn/version "0.4.2"}
+           clj-http/clj-http                      {:mvn/version "3.11.0"}
            com.layerware/hugsql-core              {:mvn/version "0.5.1"}
            com.layerware/hugsql-adapter-next-jdbc {:mvn/version "0.5.1"}
            com.mchange/c3p0                       {:mvn/version "0.9.5.5"}

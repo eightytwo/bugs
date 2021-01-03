@@ -90,7 +90,7 @@
 (defn wrap-exceptions
   "Middleware that handles any uncaught exceptions based on the environment."
   [profile]
-  (if (= profile :dev)
+  (if (contains? #{:dev :test} profile)
     handle-dev-exception
     handle-production-exception))
 
