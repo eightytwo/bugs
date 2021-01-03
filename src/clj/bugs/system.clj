@@ -45,7 +45,7 @@
 
 (defn -main
   [profile]
-  (-> (prep profile) ig/prep ig/init))
+  (-> (prep (keyword profile)) ig/prep ig/init))
 
 (comment
   (-main :dev))
