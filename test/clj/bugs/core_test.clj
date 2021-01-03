@@ -41,10 +41,14 @@
 
 (use-fixtures :once start-server-and-db)
 
+(defonce ^:private base-url
+  (str
+    "http://localhost:"
+    (get-in ig-state/config [:bugs/http-server :port])))
+
 (defn request
   [method path]
-  (let [port (get-in ig-state/config [:bugs/http-server :port])
-        url (str "http://localhost:" port path)
+  (let [url (str base-url path)
         http-fn (cond
                   (= method :get) http/get
                   (= method :post) http/post)]
