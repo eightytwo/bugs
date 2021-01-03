@@ -11,7 +11,7 @@
                 {:exception pretty/exception
                  :data      {:db db}
                  :reitit.middleware/transform
-                 (if (= profile :dev)
+                 (if (= profile :xdev)
                    ring-middleware/print-request-diffs
                    identity)})
    (ring/routes

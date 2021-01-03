@@ -12,6 +12,7 @@
             [ring.middleware.anti-forgery :refer [wrap-anti-forgery]]
             [ring.middleware.defaults :refer [site-defaults wrap-defaults]]
             [ring.middleware.flash :refer [wrap-flash]]
+            [ring.middleware.gzip :as gzip]
             [ring.middleware.reload :refer [wrap-reload]]
             [selmer.middleware :as selmer]))
 
@@ -128,6 +129,7 @@
   be the last to touch the response."
   [profile]
   (-> [[(wrap-exceptions profile)]         ;; Handle any exceptions gracefully
+       [gzip/wrap-gzip]                    ;; Compress the response
        [wrap-ring-defaults]                ;; Apply industry standard defaults
        [wrap-session]                      ;; Enable session handling
        [wrap-flash]]                       ;; Enable flash sessions
