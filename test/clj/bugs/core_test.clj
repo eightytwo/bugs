@@ -10,6 +10,10 @@
    (is (= 200 (:status response)))
    (is (str/includes? (:body response) "<h1>Welcome to Bugs!</h1>"))))
 
+(deftest load-api-docs
+  (let [response (client :get "/api/api-docs/")]
+    (is (str/includes? (:body response) "<title>Swagger UI</title>"))))
+
 (deftest test-404
  (testing "website 404"
   (let [response (client :get "/this-does-not-exist")]

@@ -52,7 +52,8 @@
   ([method path]
    (client method path {}))
   ([method path opts]
-   (let [is-api? (str/starts-with? path "/api")
+   (let [is-api? (and (str/starts-with? path "/api")
+                      (not (str/includes? path "/api-docs")))
          http-fn (cond
                    (= method :get) http/get
                    (= method :post) http/post)]
@@ -64,3 +65,10 @@
                    (merge {:accept :json, :as :json}))
            (cond-> (and is-api? (contains? {:post :put} method))
                    (merge {:content-type :json})))))))
+
+(defn test-all
+  []
+  (run-tests 'bugs.core-test 'bugs.bugs-test))
+
+(comment
+  (test-all))
