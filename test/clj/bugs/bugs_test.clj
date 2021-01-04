@@ -5,10 +5,12 @@
 
 (use-fixtures :once start-server-and-db)
 
-(deftest get-bugs-empty-database
+(deftest get-bugs
   (testing "website get bugs"
     (let [response (client :get "/bugs")
+          content-type (get-in response [:headers "Content-Type"])
           body (:body response)]
+      (is (= content-type "text/html; charset=utf-8"))
       (is (not (str/includes? body "<td>")))))
 
   (testing "api get bugs"
