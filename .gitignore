@@ -8,6 +8,9 @@ target
 .nrepl-port
 .rebel_readline_history
 
+# Log files
+*.log
+
 # Editors
 .iml
 .idea

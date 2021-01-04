@@ -1,20 +1,24 @@
 (ns bugs.bugs-test
-  (:require [bugs.setup-test :as setup]
+  (:require [bugs.setup-test :refer [client start-server-and-db]]
             [clojure.string :as str]
             [clojure.test :refer :all]))
 
-(use-fixtures :once setup/start-server-and-db)
+(use-fixtures :once start-server-and-db)
 
-(deftest load-homepage
-  (let [response (setup/request :get "/")]
-    (is (= 200 (:status response)))
-    (is (str/includes? (:body response) "<h1>Welcome to Bugs!</h1>"))))
+(deftest get-bugs-empty-database
+  (testing "website get bugs"
+    (let [response (client :get "/bugs")
+          body (:body response)]
+      (is (not (str/includes? body "<td>")))))
 
-(deftest test-404
-  (let [response (setup/request :get "/xyz")]
-    (is (= 404 (:status response)))))
+  (testing "api get bugs"
+    (let [response (client :get "/api/bugs")
+          content-type (get-in response [:headers "Content-Type"])
+          body (:body response)]
+      (is (= content-type "application/json; charset=utf-8"))
+      (is (= body [])))))
 
-(deftest get-bugs
- (let [response (setup/request :get "/bugs")
-       body     (:body response)]
-   (is (not (str/includes? body "<td>")))))
+(deftest add-bug-without-anti-forgery-token
+  (let [bug {:name "Spider"}
+        response (client :post "/bugs" bug)]
+    (is (= 403 (:status response)))))

@@ -8,8 +8,9 @@
             [ragtime.jdbc :as jdbc]
             [ragtime.repl :as rt-repl]))
 
-(def ragtime-config
-  {:datastore  (jdbc/sql-database {:connection-uri (get-in ig-state/config [:bugs/db :jdbcUrl])})
+(defn ragtime-config
+  [system-config]
+  {:datastore  (jdbc/sql-database {:connection-uri system-config})
    :migrations (jdbc/load-resources "migrations")})
 
 (defn start-system
@@ -23,11 +24,13 @@
 
 (defn migrate-db
   []
-  (try
-    (let [first-migration (first (:migrations ragtime-config))]
-      (rt-repl/rollback ragtime-config (:id first-migration)))
-    (catch Exception _))
-  (rt-repl/migrate ragtime-config))
+  (let [jdbc-url (get-in ig-state/config [:bugs/db :jdbcUrl])
+        config (ragtime-config jdbc-url)]
+    (try
+      (let [first-migration (first (:migrations config))]
+        (rt-repl/rollback config (:id first-migration)))
+      (catch Exception _))
+    (rt-repl/migrate config)))
 
 (defn start-server-and-db
   [f]
@@ -40,17 +43,24 @@
     (finally
       (stop-system))))
 
-(use-fixtures :once start-server-and-db)
+(defn full-url
+  [path]
+  (let [port (get-in ig-state/config [:bugs/http-server :port])]
+    (str "http://localhost:" port path)))
 
-(defonce ^:private base-url
-  (str
-    "http://localhost:"
-    (get-in ig-state/config [:bugs/http-server :port])))
-
-(defn request
-  [method path]
-  (let [url (str base-url path)
-        http-fn (cond
-                  (= method :get) http/get
-                  (= method :post) http/post)]
-    (http-fn url {:throw-exceptions false})))
+(defn client
+  ([method path]
+   (client method path {}))
+  ([method path opts]
+   (let [is-api? (str/starts-with? path "/api")
+         http-fn (cond
+                   (= method :get) http/get
+                   (= method :post) http/post)]
+     (http-fn
+       (full-url path)
+       (-> {:throw-exceptions false}
+           (merge opts)
+           (cond-> is-api?
+                   (merge {:accept :json, :as :json}))
+           (cond-> (and is-api? (contains? {:post :put} method))
+                   (merge {:content-type :json})))))))

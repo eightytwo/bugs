@@ -8,19 +8,20 @@
 
 (ig-repl/set-prep! #(system/prep :dev))
 
-(def config ig-state/config)
 (def go ig-repl/go)
 (def halt ig-repl/halt)
 (def reset ig-repl/reset)
 (def reset-all ig-repl/reset-all)
 
-(def ragtime-config
-  {:datastore  (jdbc/sql-database {:connection-uri (get-in config [:bugs/db :jdbcUrl])})
-   :migrations (jdbc/load-resources "migrations")})
+(defn ragtime-config
+  []
+  (let [jdbc-url (get-in ig-state/config [:bugs/db :jdbcUrl])]
+    {:datastore  (jdbc/sql-database {:connection-uri jdbc-url})
+     :migrations (jdbc/load-resources "migrations")}))
 
 (comment
-  (rt-repl/migrate ragtime-config)
-  (rt-repl/rollback ragtime-config))
+  (rt-repl/migrate (ragtime-config))
+  (rt-repl/rollback (ragtime-config)))
 
 (comment
   (go)
