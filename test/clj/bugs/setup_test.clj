@@ -1,6 +1,7 @@
-(ns bugs.core-test
+(ns bugs.setup-test
   (:require [bugs.system :as system]
             [clj-http.client :as http]
+            [clojure.string :as str]
             [clojure.test :refer :all]
             [integrant.repl :as ig-repl]
             [integrant.repl.state :as ig-state]
@@ -53,12 +54,3 @@
                   (= method :get) http/get
                   (= method :post) http/post)]
     (http-fn url {:throw-exceptions false})))
-
-(deftest test-website
-  (testing "home page"
-    (let [response (request :get "/")]
-      (is (= 200 (:status response)))))
-
-  (testing "not found"
-    (let [response (request :get "/xyz")]
-      (is (= 404 (:status response))))))
