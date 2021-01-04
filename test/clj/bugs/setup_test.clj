@@ -5,6 +5,7 @@
             [clojure.test :refer :all]
             [integrant.repl :as ig-repl]
             [integrant.repl.state :as ig-state]
+            [jsonista.core :as j]
             [ragtime.jdbc :as jdbc]
             [ragtime.repl :as rt-repl]))
 
@@ -25,10 +26,10 @@
 (defn migrate-db
   []
   (let [jdbc-url (get-in ig-state/config [:bugs/db :jdbcUrl])
-        config (ragtime-config jdbc-url)]
+        config (ragtime-config jdbc-url)
+        first-migration (first (:migrations config))]
     (try
-      (let [first-migration (first (:migrations config))]
-        (rt-repl/rollback config (:id first-migration)))
+      (rt-repl/rollback config (:id first-migration))
       (catch Exception _))
     (rt-repl/migrate config)))
 
@@ -52,19 +53,20 @@
   ([method path]
    (client method path {}))
   ([method path opts]
-   (let [is-api? (and (str/starts-with? path "/api")
-                      (not (str/includes? path "/api-docs")))
+   (let [api? (and (str/starts-with? path "/api")
+                   (not (str/includes? path "/api-docs")))
+         post-or-put? (contains? {:post :put} method)
          http-fn (cond
                    (= method :get) http/get
-                   (= method :post) http/post)]
-     (http-fn
-       (full-url path)
-       (-> {:throw-exceptions false}
-           (merge opts)
-           (cond-> is-api?
-                   (merge {:accept :json, :as :json}))
-           (cond-> (and is-api? (contains? {:post :put} method))
-                   (merge {:content-type :json})))))))
+                   (= method :post) http/post)
+         all-opts (-> {:throw-exceptions false}
+                      (merge opts)
+                      (cond-> api?
+                        (merge {:accept :json, :as :json}))
+                      (cond-> (and api? post-or-put?)
+                        (merge {:content-type :json,
+                                :body (j/write-value-as-string (:body opts))})))]
+     (http-fn (full-url path) all-opts))))
 
 (defn test-all
   []

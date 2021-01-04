@@ -1,0 +1,15 @@
+{:up   ["CREATE TYPE enum_tags AS ENUM ('safe', 'caution', 'dangerous');"
+        "CREATE TABLE bugs (
+           id serial PRIMARY KEY,
+           created_at timestamp without time zone DEFAULT now() NOT NULL,
+           name text NOT NULL,
+           short_description text NOT NULL,
+           tag enum_tags NOT NULL,
+           age int NOT NULL,
+           rating int NOT NULL,
+           CONSTRAINT ck_name_length CHECK (char_length(name) BETWEEN 3 AND 8),
+           CONSTRAINT ck_age_is_positive CHECK (age > 0),
+           CONSTRAINT ck_rating_range CHECK (rating BETWEEN 1 AND 10)
+         );"]
+ :down ["DROP TABLE bugs;"
+        "DROP TYPE enum_tags;"]}

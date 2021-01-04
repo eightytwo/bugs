@@ -22,6 +22,5 @@
 (defn create-bug
   [req]
   (let [db (:db req)
-        body (val (first (select-keys (:parameters req) [:body :form])))
-        bug (first (queries/insert-bug db body))]
-    (dissoc bug :created-at)))
+        body (val (first (select-keys (:parameters req) [:body :form])))]
+    (first (queries/insert-bug db body))))
