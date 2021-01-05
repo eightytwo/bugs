@@ -68,9 +68,5 @@
                                 :body (j/write-value-as-string (:body opts))})))]
      (http-fn (full-url path) all-opts))))
 
-(defn test-all
-  []
-  (run-tests 'bugs.core-test 'bugs.bugs-test))
-
 (comment
-  (test-all))
+  (run-all-tests))

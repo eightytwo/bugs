@@ -39,6 +39,24 @@
      {:status 403
       :title "Invalid anti-forgery token"})}))
 
+(def csp-headers
+  ["default-src 'none';"
+   "base-uri 'self';"
+   "connect-src 'self';"
+   "form-action 'self';"
+   "frame-ancestors 'none';"
+   "img-src 'self';"
+   "style-src 'self';"])
+
+(def wrap-security-headers
+  (fn [handler]
+    (fn [req]
+      (let [res (handler req)]
+        (-> res
+            (assoc-in [:headers "Referrer-Policy"] "strict-origin")
+            (cond-> (not (api-request? req))
+              (assoc-in [:headers "Content-Security-Policy"] (str/join " " csp-headers))))))))
+
 (def wrap-session
   (fn [handler]
     (session/wrap-session handler {:http-only true})))
@@ -49,6 +67,7 @@
      handler
      (-> site-defaults
          (assoc-in [:security :anti-forgery] false)
+         (assoc-in [:security :frame-options] :deny)
          (dissoc :session)))))
 
 (def wrap-prone
@@ -130,6 +149,7 @@
   [profile]
   (-> [[(wrap-exceptions profile)]         ;; Handle any exceptions gracefully
        [gzip/wrap-gzip]                    ;; Compress the response
+       [wrap-security-headers]             ;; Add security headers
        [wrap-ring-defaults]                ;; Apply industry standard defaults
        [wrap-session]                      ;; Enable session handling
        [wrap-flash]]                       ;; Enable flash sessions
