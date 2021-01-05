@@ -1,5 +1,6 @@
 (ns bugs.middleware
-  (:require [bugs.layout :as layout]
+  (:require [bugs.config :as config]
+            [bugs.layout :as layout]
             [clojure.string :as str]
             [next.jdbc :as jdbc]
             [prone.middleware :as prone]
@@ -40,19 +41,18 @@
      {:status 403
       :title "Invalid anti-forgery token"})}))
 
-(defn csp-headers
+(defn csp-header
   [profile]
-  (->
-   ["default-src 'none';"
-    "base-uri 'self';"
-    "connect-src 'self';"
-    "form-action 'self';"
-    "frame-ancestors 'none';"
-    "img-src 'self';"
-    "style-src 'self';"]
-   (cond-> (= profile :dev)
-      ;; Allow JavaScript in dev for prone
-     (conj "script-src 'self';"))))
+  (let [defaults   config/csp-header-default
+        script-src (:script-src defaults)
+        all-items  (if (= profile :dev)
+                     ;; Allow JS in dev for prone
+                     (assoc defaults :script-src (conj script-src "'self'"))
+                     defaults)]
+    (str/join
+     " "
+     (map (fn [[k v]] (str (name k) " " (str/join " " v) ";"))
+          all-items))))
 
 (defn wrap-security-headers
   [profile]
@@ -64,11 +64,14 @@
             (cond-> (not (api-request? req))
               (assoc-in
                [:headers "Content-Security-Policy"]
-               (str/join " " (csp-headers profile)))))))))
+               (csp-header profile))))))))
 
 (def wrap-session
   (fn [handler]
-    (session/wrap-session handler {:http-only true})))
+    (session/wrap-session
+     handler
+     {:cookie-name config/cookie-name
+      :http-only true})))
 
 (def wrap-ring-defaults
   (fn [handler]
