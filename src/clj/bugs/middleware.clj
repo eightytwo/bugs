@@ -31,7 +31,8 @@
                   (jdbc/with-transaction [tx db]
                     (handler (assoc req :db tx))))))})
 
-(defn wrap-csrf [handler]
+(defn wrap-csrf
+  [handler]
   (wrap-anti-forgery
    handler
    {:error-response
@@ -39,23 +40,31 @@
      {:status 403
       :title "Invalid anti-forgery token"})}))
 
-(def csp-headers
-  ["default-src 'none';"
-   "base-uri 'self';"
-   "connect-src 'self';"
-   "form-action 'self';"
-   "frame-ancestors 'none';"
-   "img-src 'self';"
-   "style-src 'self';"])
+(defn csp-headers
+  [profile]
+  (->
+   ["default-src 'none';"
+    "base-uri 'self';"
+    "connect-src 'self';"
+    "form-action 'self';"
+    "frame-ancestors 'none';"
+    "img-src 'self';"
+    "style-src 'self';"]
+   (cond-> (= profile :dev)
+      ;; Allow JavaScript in dev for prone
+     (conj "script-src 'self';"))))
 
-(def wrap-security-headers
+(defn wrap-security-headers
+  [profile]
   (fn [handler]
     (fn [req]
       (let [res (handler req)]
         (-> res
             (assoc-in [:headers "Referrer-Policy"] "strict-origin")
             (cond-> (not (api-request? req))
-              (assoc-in [:headers "Content-Security-Policy"] (str/join " " csp-headers))))))))
+              (assoc-in
+               [:headers "Content-Security-Policy"]
+               (str/join " " (csp-headers profile)))))))))
 
 (def wrap-session
   (fn [handler]
@@ -91,20 +100,20 @@
       (catch Exception e
         (layout/error-json {:status 500 :error (Throwable->map e)})))))
 
-(def handle-production-exception
+(defn handle-production-exception
   "Handle uncaught exceptions in the production environment."
-  (fn [handler]
-    (fn [req]
-      (try
-        (handler req)
-        (catch Throwable _
-          (let [error
-                {:status  500
-                 :title   "Well, that's embarrassing!"
-                 :message "It looks like an unsolved bug reared its head."}]
-            (if (api-request? req)
-              (layout/error-json error)
-              (layout/error-page error))))))))
+  [handler]
+  (fn [req]
+    (try
+      (handler req)
+      (catch Throwable _
+        (let [error
+              {:status  500
+               :title   "Well, that's embarrassing!"
+               :message "It looks like an unsolved bug reared its head."}]
+          (if (api-request? req)
+            (layout/error-json error)
+            (layout/error-page error)))))))
 
 (defn wrap-exceptions
   "Middleware that handles any uncaught exceptions based on the environment."
@@ -149,7 +158,7 @@
   [profile]
   (-> [[(wrap-exceptions profile)]         ;; Handle any exceptions gracefully
        [gzip/wrap-gzip]                    ;; Compress the response
-       [wrap-security-headers]             ;; Add security headers
+       [(wrap-security-headers profile)]   ;; Add security headers
        [wrap-ring-defaults]                ;; Apply industry standard defaults
        [wrap-session]                      ;; Enable session handling
        [wrap-flash]]                       ;; Enable flash sessions
