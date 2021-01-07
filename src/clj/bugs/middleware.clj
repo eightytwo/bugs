@@ -15,7 +15,8 @@
             [ring.middleware.flash :refer [wrap-flash]]
             [ring.middleware.gzip :as gzip]
             [ring.middleware.reload :refer [wrap-reload]]
-            [selmer.middleware :as selmer]))
+            [selmer.middleware :as selmer])
+  (:import [clojure.lang ExceptionInfo]))
 
 (defn api-request?
   "Helper function to determine if a request is for the API or from a browser."
@@ -125,6 +126,24 @@
     handle-dev-exception
     handle-production-exception))
 
+(defn handle-request-coercion-exception
+  [data]
+  (let [req (:request data)
+        req-method (:request-method req)
+        route-data (get-in req [:reitit.core/match :data req-method])
+        view-fn (:view-fn route-data)]
+    (view-fn req)))
+
+(defn wrap-request-coercion-exceptions
+  [handler]
+  (fn [req]
+    (try
+      (handler req)
+      (catch ExceptionInfo ex
+        (if (= (:type (ex-data ex)) :reitit.coercion/request-coercion)
+          (handle-request-coercion-exception (ex-data ex))
+          (throw ex))))))
+
 (def api-routes-middleware
   "The middleware listed here will be applied to all routes."
   [swagger/swagger-feature               ;; swagger feature
@@ -143,13 +162,11 @@
    parameters/parameters-middleware      ;; query-params & form-params
    muuntaja/format-negotiate-middleware  ;; content-negotiation
    muuntaja/format-response-middleware   ;; encoding response body
-   ;; replace the below with custom middleware to catch exceptions of type
-   ;; "reitit.coercion.CoercionError" and include in the html form/page
-   coercion/coerce-exceptions-middleware ;; handle coercion exceptions
+   db                                    ;; provide a database transaction
+   wrap-request-coercion-exceptions      ;; handle request coercion exceptions
    muuntaja/format-request-middleware    ;; decoding request body
    coercion/coerce-request-middleware    ;; coercing request parameters
-   coercion/coerce-response-middleware   ;; coercing response bodys
-   db])
+   coercion/coerce-response-middleware]) ;; coercing response bodys
 
 (defn handler-middleware
   "The middleware to be applied to the ring handler.
