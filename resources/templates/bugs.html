@@ -25,31 +25,32 @@
   {% csrf-field %}
   <p>
     <label for="name">Name:</label>
-    <input id="name" type="text" name="name" value="{{name}}" />
+    <input id="name" type="text" name="name" value="{{form-params.name}}" />
   </p>
 
   <p>
     <label for="description">Description:</label>
-    <textarea id="description" name="short-description">{{short-description}}</textarea>
+    <textarea id="description" name="short-description">{{form-params.short-description}}</textarea>
   </p>
 
   <p>
     <label for="tag">Tag:</label>
     <select id="tag" name="tag">
       {% for atag in tags %}
-      <option value="{{atag}}">{{atag}}</option>
+      <option value="{{atag}}" {% if atag = form-params.tag %}selected{% endif %}>{{atag}}</option>
       {% endfor %}
     </select>
   </p>
 
   <p>
     <label for="age">Age:</label>
-    <input id="age" name="age" type="number">{{age}}</input>
+    <input id="age" name="age" type="number" value="{{form-params.age}}">
   </p>
 
   <p>
     <label for="rating">Rating:</label>
-    <input id="rating" name="rating">{{rating}}</input>
+    <input id="rating" name="rating" value="{{form-params.rating}}">
+    <span>{{errors.rating.0}}</span>
   </p>
 
   <input type="submit" value="Add bug" />
