@@ -31,8 +31,10 @@
    :compile (fn [{:keys [db]} _]
               (fn [handler]
                 (fn [req]
-                  (jdbc/with-transaction [tx db]
-                    (handler (assoc req :db tx))))))})
+                  (let [method (:request-method req)
+                        write (contains? #{:post :put :delete} method)]
+                    (jdbc/with-transaction [tx db {:read-only (not write)}]
+                      (handler (assoc req :db tx)))))))})
 
 (defn wrap-csrf
   [handler]
