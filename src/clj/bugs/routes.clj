@@ -1,12 +1,14 @@
 (ns bugs.routes
   (:require [bugs.bugs.routes :as bugs-routes]
+            [bugs.health.routes :as health-routes]
             [bugs.layout :as layout]
             [bugs.middleware :as middleware]
             [camel-snake-kebab.core :as csk]
             [muuntaja.core :as m]
             [reitit.coercion.malli :as malli]
             [reitit.swagger :as swagger]
-            [reitit.swagger-ui :as swagger-ui]))
+            [reitit.swagger-ui :as swagger-ui]
+            [ring.util.http-response :refer [ok]]))
 
 (def muuntaja
   "Create a muuntaja instance that presents the API with camelCase keys
@@ -39,7 +41,8 @@
              {:url "/api/swagger.json"
               :config {:validator-url nil}})}]]
 
-    bugs-routes/api-routes]
+    bugs-routes/api-routes
+    health-routes/routes]
 
    [""
     {:coercion   (malli/create {:error-keys #{:errors}})

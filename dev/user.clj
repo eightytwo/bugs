@@ -2,6 +2,7 @@
   (:require [bugs.system :as system]
             [integrant.repl :as ig-repl]
             [integrant.repl.state :as ig-state]
+            [java-time :as jt]
             [ragtime.jdbc :as jdbc]
             [ragtime.repl :as rt-repl]
             hugsql.core))
@@ -19,6 +20,14 @@
     {:datastore  (jdbc/sql-database {:connection-uri jdbc-url})
      :migrations (jdbc/load-resources "migrations")}))
 
+(defn create-ragtime-migration
+  [name]
+  (let [date (jt/format "yyyyMMdd" (jt/local-date))
+        full-name (str date "-" name)
+        id (hash (keyword full-name))
+        file (str "resources/migrations/" full-name "-" id ".edn")]
+    (spit file "{:up   []\n :down []}")))
+
 (comment
   (rt-repl/migrate (ragtime-config))
   (rt-repl/rollback (ragtime-config)))
@@ -30,4 +39,4 @@
   (reset-all))
 
 (comment
-  (hugsql.core/def-db-fns "sql/bugs.sql"))
+  (create-ragtime-migration "!!name_me!!"))

@@ -5,6 +5,7 @@
             hugsql.core))
 
 (hugsql.core/def-db-fns "sql/bugs.sql")
+(hugsql.core/def-db-fns "sql/health.sql")
 
 (def memoized-kebab-keyword-ulate (memoize csk/->kebab-case-keyword))
 
