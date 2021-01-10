@@ -10,11 +10,10 @@
 (deftest get-health
   (let [response (client :get "/api/health")
         commit (->>
-                 (shell/sh "git" "rev-parse" "HEAD")
-                 :out
-                 str/trim-newline)
+                (shell/sh "git" "rev-parse" "HEAD")
+                :out
+                str/trim-newline)
         last-migration (-> (jdbc/load-resources "migrations") last :id)
         migration-hash (last (str/split last-migration #"-"))]
     (is (= 200 (:status response)))
     (is (= (:body response) {:apiVersion commit :dbVersion migration-hash}))))
-

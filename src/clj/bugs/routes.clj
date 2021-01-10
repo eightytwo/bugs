@@ -7,8 +7,7 @@
             [muuntaja.core :as m]
             [reitit.coercion.malli :as malli]
             [reitit.swagger :as swagger]
-            [reitit.swagger-ui :as swagger-ui]
-            [ring.util.http-response :refer [ok]]))
+            [reitit.swagger-ui :as swagger-ui]))
 
 (def muuntaja
   "Create a muuntaja instance that presents the API with camelCase keys

@@ -9,8 +9,8 @@
         migration-id (:id (queries/get-latest-migration db))
         migration-hash (last (str/split migration-id #"-"))
         commit (->>
-                 (shell/sh "git" "rev-parse" "HEAD")
-                 :out
-                 str/trim-newline)]
+                (shell/sh "git" "rev-parse" "HEAD")
+                :out
+                str/trim-newline)]
     {:api-version commit
      :db-version  migration-hash}))
