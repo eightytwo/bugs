@@ -1,5 +1,6 @@
 (ns bugs.routes
   (:require [bugs.bugs.routes :as bugs-routes]
+            [bugs.health.routes :as health-routes]
             [bugs.layout :as layout]
             [bugs.middleware :as middleware]
             [camel-snake-kebab.core :as csk]
@@ -39,7 +40,8 @@
              {:url "/api/swagger.json"
               :config {:validator-url nil}})}]]
 
-    bugs-routes/api-routes]
+    bugs-routes/api-routes
+    health-routes/routes]
 
    [""
     {:coercion   (malli/create {:error-keys #{:humanized}})

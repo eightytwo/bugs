@@ -41,15 +41,18 @@
     (let [response (client :get "/api/bugs")
           body (:body response)]
       (is (= (count body) 1))
-      (let [bug (first body)]
-        (is (pos? (:id bug)))
+      (let [bug (first body)
+            bug-id (:id bug)
+            fetched-bug (:body (client :get (str "/api/bugs/" bug-id)))]
+        (is (pos? bug-id))
         (is (contains? bug :createdAt))
         (is (= (dissoc bug :id :createdAt)
                {:name             "Spider"
                 :shortDescription "A garden spider"
                 :tag              "caution"
                 :age              2
-                :rating           6}))))))
+                :rating           6}))
+        (is (= bug fetched-bug))))))
 
 (deftest add-bug-without-anti-forgery-token
   (let [bug {:name "Spider"}

@@ -10,8 +10,8 @@
             [ragtime.repl :as rt-repl]))
 
 (defn ragtime-config
-  [system-config]
-  {:datastore  (jdbc/sql-database {:connection-uri system-config})
+  [jdbc-url]
+  {:datastore  (jdbc/sql-database {:connection-uri jdbc-url})
    :migrations (jdbc/load-resources "migrations")})
 
 (defn start-system

@@ -1,16 +1,13 @@
--- A :result value of :n below will return affected rows:
 -- :name insert-bug :i!
 -- :doc Insert a single bug returning affected row count
 INSERT INTO bugs (name, short_description, tag, age, rating)
 VALUES (:name, :short-description, :tag::enum_tags, :age, :rating)
 
--- :name get-bugs :n
+-- :name get-bugs :? :*
 -- :doc Get bug by id
 SELECT  *
 FROM    bugs
 
--- A ":result" value of ":1" specifies a single record
--- (as a hashmap) will be returned
 -- :name get-bug-by-id :? :1
 -- :doc Get bug by id
 SELECT  *
