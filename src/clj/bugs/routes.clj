@@ -22,7 +22,7 @@
 
 (def routes
   [["/api"
-    {:coercion   (malli/create {:error-keys #{:errors}})
+    {:coercion   (malli/create {:error-keys #{:errors :humanized}})
      :muuntaja   muuntaja
      :swagger    {:id ::api}
      :middleware middleware/api-routes-middleware}
@@ -44,7 +44,7 @@
     health-routes/routes]
 
    [""
-    {:coercion   (malli/create {:error-keys #{:errors}})
+    {:coercion   (malli/create {:error-keys #{:humanized}})
      :muuntaja   m/instance
      :middleware middleware/web-routes-middleware}
 

@@ -2,7 +2,11 @@
   (:require [bugs.layout :as layout]))
 
 (defn bugs-list
-  [bugs tags]
-  (layout/render
-   "bugs.html"
-   {:bugs bugs :tags tags}))
+  [req bugs tags]
+  (let [errors (:form-errors req)]
+    (layout/render
+     "bugs.html"
+     {:bugs        bugs
+      :tags        tags
+      :form-params (if errors (:form-params req) {})
+      :errors      errors})))

@@ -4,7 +4,8 @@
             [clojure.string :as str]
             [next.jdbc :as jdbc]
             [prone.middleware :as prone]
-            [reitit.ring.coercion :as coercion]
+            [reitit.coercion :as reitit-coercion]
+            [reitit.ring.coercion :as ring-coercion]
             [reitit.ring.middleware.muuntaja :as muuntaja]
             [reitit.ring.middleware.multipart :as multipart]
             [reitit.ring.middleware.parameters :as parameters]
@@ -15,7 +16,8 @@
             [ring.middleware.flash :refer [wrap-flash]]
             [ring.middleware.gzip :as gzip]
             [ring.middleware.reload :refer [wrap-reload]]
-            [selmer.middleware :as selmer]))
+            [selmer.middleware :as selmer])
+  (:import [clojure.lang ExceptionInfo]))
 
 (defn api-request?
   "Helper function to determine if a request is for the API or from a browser."
@@ -44,6 +46,7 @@
       :title "Invalid anti-forgery token"})}))
 
 (defn csp-header
+  "Format the Content Security Policy header value"
   [profile]
   (let [defaults   config/csp-header-default
         script-src (:script-src defaults)
@@ -57,6 +60,7 @@
           all-items))))
 
 (defn wrap-security-headers
+  "Middleware that adds security headers to the response"
   [profile]
   (fn [handler]
     (fn [req]
@@ -127,31 +131,52 @@
     handle-dev-exception
     handle-production-exception))
 
+(defn handle-request-coercion-exception
+  "Extract the human error messages of a request coercion exception and
+  supply these, along with other request data to the page to be rendered."
+  [data]
+  (let [req (:request data)
+        req-method (:request-method req)
+        route-data (get-in req [:reitit.core/match :data req-method])
+        view-fn (:view-fn route-data)
+        errors (:humanized (reitit-coercion/encode-error data))]
+    (view-fn (assoc req :form-errors errors))))
+
+(defn wrap-request-coercion-exceptions
+  "Catch exceptions thrown when coercing request parameters into schemas"
+  [handler]
+  (fn [req]
+    (try
+      (handler req)
+      (catch ExceptionInfo ex
+        (if (= (:type (ex-data ex)) :reitit.coercion/request-coercion)
+          (handle-request-coercion-exception (ex-data ex))
+          (throw ex))))))
+
 (def api-routes-middleware
-  "The middleware listed here will be applied to all routes."
-  [swagger/swagger-feature               ;; swagger feature
-   parameters/parameters-middleware      ;; query-params & form-params
-   muuntaja/format-negotiate-middleware  ;; content-negotiation
-   muuntaja/format-response-middleware   ;; encoding response body
-   coercion/coerce-exceptions-middleware ;; handle coercion exceptions
-   muuntaja/format-request-middleware    ;; decoding request body
-   coercion/coerce-response-middleware   ;; coercing response bodys
-   coercion/coerce-request-middleware    ;; coercing request parameters
-   multipart/multipart-middleware        ;; multipart
-   db])                                  ;; provide a database transaction
+  "The middleware listed here will be applied to the API routes."
+  [swagger/swagger-feature                    ;; swagger feature
+   parameters/parameters-middleware           ;; query-params & form-params
+   muuntaja/format-negotiate-middleware       ;; content-negotiation
+   muuntaja/format-response-middleware        ;; encoding response body
+   ring-coercion/coerce-exceptions-middleware ;; handle coercion exceptions
+   muuntaja/format-request-middleware         ;; decoding request body
+   ring-coercion/coerce-response-middleware   ;; coercing response bodys
+   ring-coercion/coerce-request-middleware    ;; coercing request parameters
+   multipart/multipart-middleware             ;; multipart
+   db])                                       ;; provide a database transaction
 
 (def web-routes-middleware
+  "The middleware listed here will be applied to the the web routes."
   [wrap-csrf
-   parameters/parameters-middleware      ;; query-params & form-params
-   muuntaja/format-negotiate-middleware  ;; content-negotiation
-   muuntaja/format-response-middleware   ;; encoding response body
-   ;; replace the below with custom middleware to catch exceptions of type
-   ;; "reitit.coercion.CoercionError" and include in the html form/page
-   coercion/coerce-exceptions-middleware ;; handle coercion exceptions
-   muuntaja/format-request-middleware    ;; decoding request body
-   coercion/coerce-request-middleware    ;; coercing request parameters
-   coercion/coerce-response-middleware   ;; coercing response bodys
-   db])
+   parameters/parameters-middleware           ;; query-params & form-params
+   muuntaja/format-negotiate-middleware       ;; content-negotiation
+   muuntaja/format-response-middleware        ;; encoding response body
+   db                                         ;; provide a database transaction
+   wrap-request-coercion-exceptions           ;; handle coercion exceptions
+   muuntaja/format-request-middleware         ;; decoding request body
+   ring-coercion/coerce-request-middleware    ;; coercing request parameters
+   ring-coercion/coerce-response-middleware]) ;; coercing response bodys
 
 (defn handler-middleware
   "The middleware to be applied to the ring handler.

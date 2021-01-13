@@ -30,6 +30,7 @@
 
     :post {:summary    "Add a bug to your collection"
            :parameters {:form s/new-bug}
+           :view-fn    c/show-bugs
            :handler    (fn [req]
                          (c/create-bug req)
                          (c/show-bugs req))}}])

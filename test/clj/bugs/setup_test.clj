@@ -53,19 +53,21 @@
   ([method path]
    (client method path {}))
   ([method path opts]
-   (let [api? (and (str/starts-with? path "/api")
-                   (not (str/includes? path "/api-docs")))
-         post-or-put? (contains? {:post :put} method)
+   (let [is-api (and (str/starts-with? path "/api")
+                     (not (str/includes? path "/api-docs")))
+         is-write (contains? #{:post :put} method)
          http-fn (cond
                    (= method :get) http/get
                    (= method :post) http/post)
          all-opts (-> {:throw-exceptions false}
                       (merge opts)
-                      (cond-> api?
+                      (cond-> is-api
                         (merge {:accept :json, :as :json}))
-                      (cond-> (and api? post-or-put?)
+                      (cond-> (and is-api is-write)
                         (merge {:content-type :json,
-                                :body (j/write-value-as-string (:body opts))})))]
+                                :body (j/write-value-as-string (:body opts))}))
+                      (cond-> (and (not is-api) is-write)
+                        (merge {:form-params (:body opts)})))]
      (http-fn (full-url path) all-opts))))
 
 (comment

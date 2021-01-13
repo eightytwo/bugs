@@ -11,7 +11,7 @@
 (defn show-bugs
   [req]
   (let [bugs (get-bugs req)]
-    (v/bugs-list bugs s/tags)))
+    (v/bugs-list req bugs s/tags)))
 
 (defn get-bug
   [req]
