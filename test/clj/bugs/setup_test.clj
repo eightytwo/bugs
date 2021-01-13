@@ -54,7 +54,7 @@
    (client method path {}))
   ([method path opts]
    (let [is-api (and (str/starts-with? path "/api")
-                   (not (str/includes? path "/api-docs")))
+                     (not (str/includes? path "/api-docs")))
          is-write (contains? #{:post :put} method)
          http-fn (cond
                    (= method :get) http/get
