@@ -29,7 +29,7 @@
  :aliases {:test      {:extra-paths ["test/clj"]
                        :extra-deps  {lambdaisland/kaocha {:mvn/version "1.0-612"}}
                        :main-opts   ["-m" "kaocha.runner"]}
-           :uberjar   {:extra-deps {uberdeps {:mvn/version "0.1.10"}}
+           :uberjar   {:extra-deps {uberdeps/uberdeps {:mvn/version "0.1.10"}}
                        :main-opts  ["-m" "uberdeps.uberjar" "--target" "target/bugs.core-0.1.jar"]}
            :fig       {:extra-deps  {com.bhauman/figwheel-main       {:mvn/version "0.1.9"}
                                      com.bhauman/rebel-readline-cljs {:mvn/version "0.1.4"}}

@@ -71,4 +71,16 @@
      (http-fn (full-url path) all-opts))))
 
 (comment
-  (run-all-tests))
+  (defn load-files [path]
+    (let [file  (java.io.File. path)
+          files (.listFiles file)]
+      (doseq [x files]
+        (when (.isFile x)
+          (load-file (.getCanonicalPath x))))))
+
+  (defn launch-tests
+    []
+    (load-files "test/clj/bugs")
+    (run-all-tests))
+
+  (launch-tests))
