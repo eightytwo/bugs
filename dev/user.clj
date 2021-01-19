@@ -24,7 +24,7 @@
   [name]
   (let [date (jt/format "yyyyMMdd" (jt/local-date))
         full-name (str date "-" name)
-        id (hash (keyword full-name))
+        id (Math/abs (hash (keyword full-name)))
         file (str "resources/migrations/" full-name "-" id ".edn")]
     (spit file "{:up   []\n :down []}")))
 

@@ -2,6 +2,7 @@
   (:require [bugs.config :as config]
             [bugs.layout :as layout]
             [clojure.string :as str]
+            [jdbc-ring-session.core :refer [jdbc-store]]
             [next.jdbc :as jdbc]
             [prone.middleware :as prone]
             [reitit.coercion :as reitit-coercion]
@@ -10,7 +11,6 @@
             [reitit.ring.middleware.multipart :as multipart]
             [reitit.ring.middleware.parameters :as parameters]
             [reitit.swagger :as swagger]
-            [ring.adapter.undertow.middleware.session :as session]
             [ring.middleware.anti-forgery :refer [wrap-anti-forgery]]
             [ring.middleware.defaults :refer [site-defaults wrap-defaults]]
             [ring.middleware.flash :refer [wrap-flash]]
@@ -72,21 +72,16 @@
                [:headers "Content-Security-Policy"]
                (csp-header profile))))))))
 
-(def wrap-session
-  (fn [handler]
-    (session/wrap-session
-     handler
-     {:cookie-name config/cookie-name
-      :http-only true})))
-
-(def wrap-ring-defaults
+(defn wrap-ring-defaults
+  [db]
   (fn [handler]
     (wrap-defaults
      handler
      (-> site-defaults
          (assoc-in [:security :anti-forgery] false)
          (assoc-in [:security :frame-options] :deny)
-         (dissoc :session)))))
+         (assoc-in [:session :cookie-name] config/cookie-name)
+         (assoc-in [:session :store] (jdbc-store db))))))
 
 (def wrap-prone
   "Use prone for displaying errors nicely in the browser."
@@ -185,12 +180,11 @@
   bottom to top. This means the first item in the vector (the outermost
   layer of the wrapping) will be the first to process a request and
   be the last to touch the response."
-  [profile]
+  [profile db]
   (-> [[(wrap-exceptions profile)]         ;; Handle any exceptions gracefully
        [gzip/wrap-gzip]                    ;; Compress the response
        [(wrap-security-headers profile)]   ;; Add security headers
-       [wrap-ring-defaults]                ;; Apply industry standard defaults
-       [wrap-session]                      ;; Enable session handling
+       [(wrap-ring-defaults db)]           ;; Apply industry standard defaults
        [wrap-flash]]                       ;; Enable flash sessions
       (cond-> (= profile :dev)
         (concat [[wrap-prone]              ;; Present exceptions nicely in the browser

@@ -17,4 +17,4 @@
    (ring/routes
     (ring/redirect-trailing-slash-handler)
     (ring/create-default-handler))
-   {:middleware (middleware/handler-middleware profile)}))
+   {:middleware (middleware/handler-middleware profile db)}))
