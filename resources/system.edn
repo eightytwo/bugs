@@ -1,13 +1,16 @@
-{:bugs/http-server {:port    #profile {:dev  3000
-                                       :test 3333
-                                       :prod #long #or [#env PORT 8000]}
-                    :handler #ig/ref :bugs/handler}
- :bugs/handler     {:db      #ig/ref :bugs/db
-                    :selma   #ig/ref :bugs/selma
-                    :profile #profile {:dev  :dev
-                                       :test :test
-                                       :prod :prod}}
- :bugs/db          {:jdbcUrl #profile {:dev  "jdbc:postgresql://localhost:5432/bugs_dev?user=bugs&password=bugs"
-                                       :test "jdbc:postgresql://localhost:5432/bugs_test?user=bugs&password=bugs"
-                                       :prod #env "BUGS_DB_URI"}}
- :bugs/selma       {:templates-dir "templates"}}
+{:bugs/http-server     {:port    #profile {:dev  3000
+                                           :test 3333
+                                           :prod #long #or [#env PORT 8000]}
+                        :handler #ig/ref :bugs/handler}
+ :bugs/handler         {:db      #ig/ref :bugs/db
+                        :selma   #ig/ref :bugs/selma
+                        :profile #profile {:dev  :dev
+                                           :test :test
+                                           :prod :prod}}
+ :bugs/session-cleaner {:db #ig/ref :bugs/db}
+ :bugs/db              {:jdbcUrl
+                        #profile
+                         {:dev  "jdbc:postgresql://localhost:5432/bugs_dev?user=bugs&password=bugs"
+                          :test "jdbc:postgresql://localhost:5432/bugs_test?user=bugs&password=bugs"
+                          :prod #env "BUGS_DB_URI"}}
+ :bugs/selma           {:templates-dir "templates"}}

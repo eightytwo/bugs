@@ -24,6 +24,7 @@
            ring/ring-core                         {:mvn/version "1.8.2"}
            ring/ring-defaults                     {:mvn/version "0.3.2"}
            ring/ring-devel                        {:mvn/version "1.8.2"}
+           ring/ring-session-timeout              {:mvn/version "0.2.0"}
            seancorfield/next.jdbc                 {:mvn/version "1.1.613"}
            selmer/selmer                          {:mvn/version "1.12.31"}
            luminus-framework/jdbc-ring-session    {:git/url "https://github.com/eightytwo/jdbc-ring-session.git"

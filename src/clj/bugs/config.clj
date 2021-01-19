@@ -10,3 +10,5 @@
    :style-src       ["'self'"]})
 
 (def cookie-name "bsid")
+
+(def session-timeout-mins 1)

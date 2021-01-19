@@ -16,6 +16,7 @@
             [ring.middleware.flash :refer [wrap-flash]]
             [ring.middleware.gzip :as gzip]
             [ring.middleware.reload :refer [wrap-reload]]
+            [ring.middleware.session-timeout :refer [wrap-idle-session-timeout]]
             [selmer.middleware :as selmer])
   (:import [clojure.lang ExceptionInfo]))
 
@@ -71,6 +72,15 @@
               (assoc-in
                [:headers "Content-Security-Policy"]
                (csp-header profile))))))))
+
+(defn wrap-session-timeout
+  [handler]
+  (wrap-idle-session-timeout
+   handler
+   {:timeout          (* config/session-timeout-mins 60)
+    :timeout-response {:status  200
+                       :headers {"Content-Type" "text/html; charset=utf-8"}
+                       :body    "Session timed out"}}))
 
 (defn wrap-ring-defaults
   [db]
@@ -185,6 +195,7 @@
        [gzip/wrap-gzip]                    ;; Compress the response
        [(wrap-security-headers profile)]   ;; Add security headers
        [(wrap-ring-defaults db)]           ;; Apply industry standard defaults
+       [wrap-session-timeout]              ;; Apply session timeout values
        [wrap-flash]]                       ;; Enable flash sessions
       (cond-> (= profile :dev)
         (concat [[wrap-prone]              ;; Present exceptions nicely in the browser

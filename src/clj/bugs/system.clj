@@ -5,8 +5,9 @@
             [hugsql.core :as hugsql]
             [hugsql.adapter.next-jdbc :as next-adapter]
             [integrant.core :as ig]
-            [next.jdbc.connection :as connection]
+            [jdbc-ring-session.cleaner :refer [start-cleaner]]
             [luminus.http-server :as http]
+            [next.jdbc.connection :as connection]
             [selmer.parser :as selmer])
   (:import  (com.mchange.v2.c3p0 ComboPooledDataSource)))
 
@@ -30,6 +31,9 @@
 (defmethod ig/init-key :bugs/handler [_ {:keys [profile db]}]
   (core/create-app profile db))
 
+(defmethod ig/init-key :bugs/session-cleaner [_ {:keys [db]}]
+  (start-cleaner db))
+
 (defmethod ig/init-key :bugs/db [_ db]
   (hugsql/set-adapter! (next-adapter/hugsql-adapter-next-jdbc))
   (connection/->pool ComboPooledDataSource db))
@@ -39,6 +43,9 @@
 
 (defmethod ig/halt-key! :bugs/http-server [_ server]
   (.stop server))
+
+(defmethod ig/halt-key! :bugs/session-cleaner [_ cleaner]
+  (.stop cleaner))
 
 (defmethod ig/halt-key! :bugs/db [_ db]
   (.close db))
